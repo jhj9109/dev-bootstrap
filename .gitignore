@@ -1,0 +1,4 @@
+config/profiles.conf
+*.log
+.DS_Store
+config/repositories.conf

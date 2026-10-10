@@ -1,0 +1,6 @@
+# Copy to profiles.conf and edit locally (not committed).
+# Names and emails are Git commit identities; these are NOT authentication credentials.
+GITHUB_PERSONAL_USER=""
+GITHUB_PERSONAL_EMAIL=""
+GITHUB_SECONDARY_USER=""
+GITHUB_SECONDARY_EMAIL=""

@@ -1,0 +1,5 @@
+# Optional repository manifest. Copy to repositories.conf (ignored by Git).
+# One OWNER/REPO per line; blank lines and comments are ignored.
+# Entries use the default GitHub profile and authentication method.
+# owner/project-one
+# owner/project-two
