@@ -69,7 +69,7 @@ ssh_doctor() {
   local output status
   output="$(ssh -T -o BatchMode=yes -o ConnectTimeout=8 "$PROFILE_ALIAS" 2>&1)"; status=$?
   # GitHub's successful SSH authentication returns exit code 1.
-  if [[ "$output" == *'successfully authenticated'* && "$output" == *"$PROFILE_USER"* ]]; then
+  if [[ "$status" -eq 1 ]] && printf '%s\n' "$output" | grep -Fxq "Hi ${PROFILE_USER}! You've successfully authenticated, but GitHub does not provide shell access."; then
     log_ok "$output"; return 0
   fi
   log_warn "GitHub SSH verification unsuccessful (exit $status): $output"
