@@ -89,3 +89,16 @@ blocks that selection and displays an error. Configuration files are sourced as
 trusted Bash code; do not load files from untrusted sources.
 
 Regression test: `bash tests/test_menu_reload.sh`.
+
+### iTerm2 download progress
+
+`./setup.sh install iterm` displays curl's download progress bar when stderr is
+attached to a terminal. It also reports the download, extraction, and copy stages,
+and elapsed time on completion. Redirected/non-interactive runs display stage logs
+without a continuously updated progress bar. Connections time out after 15 seconds;
+transfers that stay below 1 KiB/s for 30 seconds are aborted and curl retries up
+to two times. This detects a stalled download; it does not guarantee that a slow
+but healthy network will finish. Archive signature/checksum verification is not yet
+implemented.
+
+Run the isolated mock test with `bash tests/test_iterm_progress.sh`.
