@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 load_config() {
   local root="$1" personal="$1/config/profiles.conf"
+  # Prevent stale profile values if profiles.conf was removed or fields were deleted.
+  unset GITHUB_PERSONAL_USER GITHUB_PERSONAL_EMAIL GITHUB_SECONDARY_USER GITHUB_SECONDARY_EMAIL
   # Configuration files are Bash and must be trusted before sourcing.
   # shellcheck source=/dev/null
   source "$root/config/defaults.conf" || return 1

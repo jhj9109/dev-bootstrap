@@ -79,3 +79,13 @@ bash tests/test_phase4.sh
 
 - [사용 설명서](docs/USER_GUIDE.md): 최초 설치, 매주 복구, 명령어, 문제 해결
 - [설계 및 운영 참고](docs/DESIGN_AND_LIMITATIONS.md): 구성 요소, 동작 규약, 한계, 향후 개선
+
+### Interactive configuration reload (debug fix)
+
+The interactive menu reloads `config/defaults.conf` and `config/profiles.conf` before
+running each selection. You may edit `profiles.conf` in another editor and choose
+`2. Configure Git identity` without restarting the menu. An invalid configuration
+blocks that selection and displays an error. Configuration files are sourced as
+trusted Bash code; do not load files from untrusted sources.
+
+Regression test: `bash tests/test_menu_reload.sh`.
