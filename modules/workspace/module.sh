@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 workspace_status() {
   local path="$WORKSPACE_DIR"
-  [[ $path == /* && $path == "$HOME"/* ]] || {
-    log_error 'Workspace must be an absolute directory inside HOME'; return 2
-  }
-  case "$path/" in
-    *//*|*/./*|*/../*) log_error 'Unsafe workspace path'; return 2 ;;
-  esac
+  [[ $path == "$HOME"/* ]] || return 1
+  case "$path/" in *//*|*/./*|*/../*) return 1 ;; esac
   while [[ $path != "$HOME" ]]; do
-    if [[ -L $path || ( -e $path && ( ! -d $path || ! -x $path ) ) ]]; then
-      log_error 'Unsafe workspace path'; return 2
+    [[ ! -L $path ]] || return 1
+    if [[ -e $path ]]; then
+      [[ -d $path && -x $path ]] || return 1
     fi
     path=${path%/*}
   done
@@ -18,4 +15,4 @@ workspace_status() {
 }
 
 register_module --id workspace --name Workspace --platforms 'Darwin Linux' \
-  --check workspace_status --apply workspace_create --verify workspace_status
+  --check workspace_status --apply workspace_configure --verify workspace_status

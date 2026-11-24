@@ -6,7 +6,7 @@
 
 - [x] **T01 · CLI와 메뉴 분리.** `setup.sh`의 인자 처리와 대화형 메뉴를 각각 `core/cli.sh`, `core/menu.sh`로 옮긴다. 기존 설치 함수를 그대로 호출한다. 두 진입점의 help, 잘못된 인자의 종료 코드 2, 메뉴 2번의 설정 재로딩, 0번 종료를 확인한다.
 - [x] **T02 · Registry와 첫 모듈 등록.** 저장소 내부의 `modules/*/module.sh` 탐색을 시작 경로에 연결하고 workspace를 등록한다. 중복 ID, 필수 함수 누락, 로드 실패를 각각 주입해 사용자 파일을 쓰기 전에 종료하는지 확인한다.
-- [x] **T03 · Workspace를 Runner로 실행.** 기존 `configure workspace` 요청을 check → apply → verify로 연결한다. 임시 HOME에서 첫 실행은 디렉터리를 만들고 두 번째는 건너뛰어야 한다. 진단 오류 시 apply 호출 0회, 변경 후 검증 실패 시 비정상 종료를 확인한다.
+- [ ] **T03 · Workspace를 Runner로 실행.** 기존 `configure workspace` 요청을 check → apply → verify로 연결한다. 임시 HOME에서 첫 실행은 디렉터리를 만들고 두 번째는 건너뛰어야 한다. 진단 오류 시 apply 호출 0회, 변경 후 검증 실패 시 비정상 종료를 확인한다.
 
 ## Phase 2 · 기존 기능을 모듈별로 이전
 
