@@ -64,7 +64,13 @@ MOCK
 chmod +x "$TMP/mockbin/ssh" "$TMP/mockbin/ssh-keygen"
 export PATH="$TMP/mockbin:$PATH"
 "$TMP/project/setup.sh" all --profile personal --no-passphrase >/dev/null
-"$TMP/project/setup.sh" all --profile personal --no-passphrase >/dev/null
+# Exercise run_all's iTerm2 branch against an isolated system installation.
+printf 'INSTALL_ITERM=true\n' >> "$TMP/project/config/defaults.conf"
+printf '\niterm_system_installed() { return 0; }\n' >> "$TMP/project/modules/iterm.sh"
+printf '#!/bin/sh\necho Darwin\n' > "$TMP/mockbin/uname"
+chmod +x "$TMP/mockbin/uname"
+"$TMP/project/setup.sh" all --profile personal --no-passphrase > "$TMP/all-output"
+grep -Fq "iterm: SKIPPED" "$TMP/all-output"
 [[ -f "$HOME/.ssh/dev-bootstrap-personal" ]]
 [[ "$(grep -Fc '# Dev Bootstrap managed environment' "$HOME/.zshrc")" == 1 ]]
 [[ "$(cat "$HOME/Documents/keep.txt")" == keep ]]

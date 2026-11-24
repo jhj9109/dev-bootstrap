@@ -9,6 +9,7 @@ cp -R "$root"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$tmp/project/"
 project="$tmp/project"
 source "$project/lib/logger.sh"
 source "$project/modules/workspace.sh"
+source "$project/modules/iterm.sh"
 source "$project/core/registry.sh"
 
 discover_modules "$project"

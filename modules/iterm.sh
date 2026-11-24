@@ -1,16 +1,49 @@
 #!/usr/bin/env bash
-iterm_check() {
-  [[ -d "$HOME/Applications/iTerm.app" || -d "$HOME/Applications/iTerm2.app" || -d /Applications/iTerm.app || -d /Applications/iTerm2.app ]]
+iterm_system_installed() {
+  [[ -d /Applications/iTerm.app || -d /Applications/iTerm2.app ]]
 }
 
-iterm_install() {
-  [[ "$(uname -s)" == Darwin ]] || { log_error 'iTerm2 requires macOS'; return 3; }
-  for cmd in curl ditto; do require_command "$cmd" || { log_error "Missing $cmd"; return 3; }; done
-  if iterm_check; then log_ok 'iTerm2 already installed'; return 0; fi
+iterm_check() {
+  [[ -d "$HOME/Applications/iTerm.app" || -d "$HOME/Applications/iTerm2.app" ]] || iterm_system_installed
+}
 
+iterm_safe_destination() {
+  local dir="$HOME/Applications" path
+  for path in "$HOME" "$dir" "$dir/iTerm.app" "$dir/iTerm2.app"; do
+    if [[ -L $path || ( -e $path && ( ! -d $path || ! -x $path ) ) ]]; then
+      log_error "Unsafe iTerm2 destination: $path"
+      return 1
+    fi
+  done
+}
+
+iterm_publish_bundle() (
+  local app=$1 bundle=${1##*/} stage
+  iterm_safe_destination || return 1
+  mkdir -p -- "$HOME/Applications" || return 1
+  cd -P -- "$HOME/Applications" || return 1
+  iterm_safe_destination || return 1
+  stage=$(mktemp -d .iterm-install.XXXXXXXX) || return 1
+  trap 'rm -rf -- "$stage"' EXIT
+  log_info 'iTerm2: copying application into ~/Applications'
+  if ! ditto "$app" "$stage/$bundle"; then
+    log_error 'iTerm2 application copy failed'
+    return 1
+  fi
+  [[ -d "$stage/$bundle" && ! -L "$stage/$bundle" ]] || return 5
+  iterm_safe_destination || return 1
+  # Both paths are on the same filesystem. Publish only a complete bundle.
+  [[ . -ef "$HOME/Applications" ]] || return 1
+  mv -n "$stage/$bundle" . || return 1
+  [[ ! -e "$stage/$bundle" ]] || { log_error 'Destination already exists'; return 1; }
+)
+
+iterm_install() (
   local tmp='' zip='' app='' bytes='' start=$SECONDS
   local -a curl_progress=(--no-progress-meter)
   tmp="$(mktemp -d)" || { log_error 'Cannot create temporary directory'; return 1; }
+  trap 'rm -rf -- "$tmp"' EXIT
+  [[ $tmp == /* ]] || tmp="$PWD/$tmp"
   zip="$tmp/iterm.zip"
 
   # curl's progress bar is meaningful on a terminal, but noisy in redirected logs.
@@ -22,12 +55,10 @@ iterm_install() {
       --retry 2 --retry-delay 2 \
       'https://iterm2.com/downloads/stable/latest' -o "$zip"; then
     log_error 'iTerm2 download failed (network, server, or stalled transfer). Try again later.'
-    rm -rf "$tmp"
     return 1
   fi
   if [[ ! -s "$zip" ]]; then
     log_error 'iTerm2 download produced an empty archive'
-    rm -rf "$tmp"
     return 5
   fi
   bytes="$(wc -c < "$zip" | tr -d '[:space:]')"
@@ -36,34 +67,14 @@ iterm_install() {
   log_info 'iTerm2: extracting archive (this may take a while)'
   if ! ditto -x -k "$zip" "$tmp/extracted"; then
     log_error 'iTerm2 archive extraction failed'
-    rm -rf "$tmp"
     return 1
   fi
   app="$tmp/extracted/iTerm.app"
   [[ -d "$app" ]] || app="$tmp/extracted/iTerm2.app"
-  if [[ ! -d "$app" ]]; then
+  if [[ ! -d "$app" || -L "$app" || -L "$tmp/extracted" ]]; then
     log_error 'Expected iTerm application not found in archive'
-    rm -rf "$tmp"
     return 5
   fi
 
-  if ! mkdir -p "$HOME/Applications"; then
-    log_error 'Cannot create ~/Applications'
-    rm -rf "$tmp"
-    return 1
-  fi
-  if [[ -e "$HOME/Applications/$(basename "$app")" ]]; then
-    log_error 'Destination already exists; refusing to overwrite'
-    rm -rf "$tmp"
-    return 1
-  fi
-  log_info 'iTerm2: copying application into ~/Applications'
-  if ! ditto "$app" "$HOME/Applications/$(basename "$app")"; then
-    log_error 'iTerm2 application copy failed'
-    rm -rf "$tmp"
-    return 1
-  fi
-  rm -rf "$tmp"
-  iterm_check || { log_error 'iTerm2 verification failed'; return 5; }
-  log_ok "iTerm2 installed in ~/Applications ($((SECONDS - start))s total)"
-}
+  iterm_publish_bundle "$app"
+)
