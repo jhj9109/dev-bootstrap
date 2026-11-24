@@ -46,6 +46,8 @@ register_module --id sample --name "예제 도구" --platforms "Darwin Linux" \
 | apply | check가 10일 때만 호출한다. 0이면 verify로 진행하고 3·4는 위 상태로 보낸다. 그 밖의 비정상 종료는 FAILED다. |
 | verify | 변경 후 같은 버전·설정·권한을 재확인한다. 0이면 SUCCESS, 여전히 미충족이면 FAILED다. 외부 사용자 조치와 누락 도구는 4·3으로 전달한다. |
 
+Phase 1의 `runner_run <id>`는 SUCCESS와 SKIPPED에 0을, 나머지 상태에 1을 반환한다. 호출 직후 `RUNNER_STATUS`에서 상태를, `RUNNER_PHASE`에서 마지막 단계를, `RUNNER_HOOK_STATUS`에서 해당 훅이 반환한 원본 코드를 읽을 수 있다. 조회나 플랫폼 검사에서 종료하면 훅 코드는 빈 값이다. 기존 CLI는 이 결과를 명령별 종료 코드로 변환한다.
+
 예를 들어 Node는 요청 버전 해석 결과, default alias와 필요한 셸 조각을 확인한다. 실행 파일을 읽을 수 없는 상황은 진단 실패다. SSH 로컬 키·별칭 구성과 원격 계정 검증은 독립 작업이다. 원격 인증을 요구하는 작업에서 등록이 필요하면 NEEDS_ACTION을 반환한다. 기존 configure github의 로컬 완료 의미는 호환 어댑터가 보존한다.
 
 `check` 명령은 변경 필요를 표시하고 비영 종료하며 apply를 호출하지 않는다. `plan`과 `all --dry-run`은 설정·계획 검증과 대상·순서·선행 조건 표시에 한정한다. 실행 요약은 각 ID, 상태, 실패 단계·사유와 재실행 명령을 담는다. 새 집계 CLI는 모든 목표 충족 시 0, 실행 미완료 시 1, 입력·설정·계획 오류 시 2다. 기존 단일 명령의 종료 코드는 호환 테스트로 고정한다.

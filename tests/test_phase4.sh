@@ -17,6 +17,9 @@ CONF
 printf 'keep\n' > "$HOME/Documents/keep.txt"
 "$TMP/project/setup.sh" configure workspace >/dev/null
 [[ "$(cat "$HOME/Documents/keep.txt")" == keep ]]
+# Clone and all still call the legacy Workspace function. Make an accidental
+# dispatch through the registered check fail in this temporary project.
+printf '\nworkspace_status() { return 23; }\n' >> "$TMP/project/modules/workspace/module.sh"
 # Real local Git fixture; exercise remote changes without contacting GitHub.
 git init -q "$TMP/fixture"
 "$TMP/project/setup.sh" repo remote owner/project --repo "$TMP/fixture" --profile personal >/dev/null

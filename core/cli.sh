@@ -84,6 +84,21 @@ run_install() {
     *) log_error "Unknown install target: $target"; return 2 ;;
   esac
 }
+run_workspace() {
+  local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
+  runner_run workspace && return 0
+  case "$RUNNER_STATUS" in
+    BLOCKED|UNSUPPORTED) return 3 ;;
+    NEEDS_ACTION) return 4 ;;
+  esac
+  # workspace_configure performs its own path and post-install checks in apply.
+  case "$RUNNER_PHASE:$RUNNER_HOOK_STATUS" in
+    check:2) log_error 'Workspace must be a safe directory inside HOME'; return 2 ;;
+    apply:2) return 2 ;;
+    apply:5|verify:*) return 5 ;;
+    *) return 1 ;;
+  esac
+}
 run_all() {
   local profile="$1" method="$2" no_passphrase="$3" failures=0
   log_info 'Starting full setup; failures will be summarized'
@@ -152,7 +167,7 @@ main() {
       [[ $# -ge 2 ]] || { usage; return 2; }
       if [[ "$target" == workspace ]]; then
         [[ $# -eq 2 ]] || return 2
-        workspace_configure; return $?
+        run_workspace; return $?
       fi
       if [[ "$target" == shell ]]; then
         [[ $# -eq 2 ]] || { log_error 'Shell accepts no options'; return 2; }

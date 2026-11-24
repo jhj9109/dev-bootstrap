@@ -9,7 +9,7 @@ for module in git auth/ssh auth/gh github shell node python iterm workspace repo
   # shellcheck source=/dev/null
   source "$ROOT_DIR/modules/$module.sh" || exit 1
 done
-for core in registry cli menu; do
+for core in registry runner cli menu; do
   # shellcheck source=/dev/null
   source "$ROOT_DIR/core/$core.sh" || exit 1
 done

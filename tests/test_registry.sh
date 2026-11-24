@@ -25,7 +25,7 @@ rmdir "$WORKSPACE_DIR"
 touch "$WORKSPACE_DIR"
 status=0
 workspace_status || status=$?
-[[ $status == 1 ]]
+[[ $status == 2 ]]
 rm "$WORKSPACE_DIR"
 
 fixture="$project/modules/sample"
