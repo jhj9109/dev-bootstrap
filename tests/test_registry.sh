@@ -13,7 +13,7 @@ source "$project/core/registry.sh"
 
 discover_modules "$project"
 index=$(registry_index workspace)
-[[ ${REGISTRY_NAMES[index]} == Workspace && ${REGISTRY_APPLY[index]} == workspace_configure ]]
+[[ ${REGISTRY_NAMES[index]} == Workspace && ${REGISTRY_APPLY[index]} == workspace_create ]]
 if registry_index absent; then exit 1; fi
 WORKSPACE_DIR="$HOME/Documents"
 status=0
@@ -24,8 +24,8 @@ mkdir "$WORKSPACE_DIR"
 rmdir "$WORKSPACE_DIR"
 touch "$WORKSPACE_DIR"
 status=0
-workspace_status || status=$?
-[[ $status == 1 ]]
+workspace_status 2>"$tmp/out" || status=$?
+[[ $status == 2 ]]
 rm "$WORKSPACE_DIR"
 
 fixture="$project/modules/sample"

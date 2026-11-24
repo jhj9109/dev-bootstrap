@@ -19,7 +19,7 @@ menu() {
       6) run_install python ;;
       7) run_install iterm ;;
       8) shell_configure ;;
-      9) workspace_configure ;;
+      9) run_workspace ;;
       10) run_all "$DEFAULT_GITHUB_PROFILE" "$DEFAULT_AUTH_METHOD" false ;;
       11) usage ;;
       0) return 0 ;;
