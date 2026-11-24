@@ -2,7 +2,7 @@
 
 ## Phase 0 기준 결과
 
-2026-11-24, 리비전 `44c15d5`, Linux x86_64, Bash 5.2.37, Git 2.56.1에서 아래 명령을 실행했다. 셸 파일별 문법 검사와 7개 테스트 스크립트가 모두 종료 코드 0으로 끝났다. 각 스크립트가 PASS에 도달했다. 표의 단위는 테스트 스크립트다.
+2026-11-24, 리비전 `44c15d5`, Linux x86_64, Bash 5.2.37, Git 2.56.1에서 기준 검사를 실행했다. 셸 파일별 문법 검사와 7개 테스트 스크립트가 모두 종료 코드 0으로 끝났다. 각 스크립트가 PASS에 도달했다. 표의 단위는 테스트 스크립트다.
 
 | tests/ 아래 파일 | 확인한 동작 |
 |---|---|
@@ -18,19 +18,13 @@ T02에서 추가한 `test_registry.sh`는 임시 저장소의 모듈 조회, Wor
 
 ## 재현
 
-저장소 루트에서 Bash로 실행한다. 각 테스트가 임시 HOME을 준비한다. 복제 테스트의 HTTPS 주소는 로컬 Git fixture로 치환된다. 테스트마다 별도 프로세스로 실행해야 설정과 PATH가 섞이지 않는다.
+Git 작업 트리의 루트에서 아래 명령을 실행한다. 다른 디렉터리에서는 스크립트의 경로를 지정한다.
 
 ```bash
-(
-  set -e
-  for file in bootstrap.sh setup.sh core/*.sh lib/*.sh modules/*.sh modules/*/*.sh tests/*.sh; do
-    bash -n "$file"
-  done
-  for file in tests/test_*.sh; do
-    env -i PATH="$PATH" GIT_CONFIG_NOSYSTEM=1 GIT_ALLOW_PROTOCOL=file GIT_TERMINAL_PROMPT=0 bash "$file"
-  done
-)
+./scripts/verify.sh
 ```
+
+[검증 스크립트](../scripts/verify.sh)가 추적 중이거나 Git에서 무시하지 않는 신규 `.sh` 파일을 문법 검사한다. `tests/` 아래에서 이름이 `test_*.sh`인 파일은 하위 디렉터리까지 찾아 개별 Bash 프로세스에서 실행한다. 각 테스트에는 임시 HOME과 비운 환경을 제공하고 PATH만 계승한다. Git은 시스템 설정과 대화형 인증을 끄고 file 프로토콜만 허용한다. 네트워크를 사용하는 외부 도구는 테스트 fixture에서 대체한다. 실패 메시지의 파일과 종료 코드를 확인한다.
 
 T01부터 `test_cli.sh`와 `test_menu_reload.sh`는 `setup.sh`와 `bootstrap.sh`를 각각 실행한다. 두 진입점의 도움말, 잘못된 명령·옵션의 종료 코드 2, 메뉴 종료 및 설정 재로딩을 확인한다.
 

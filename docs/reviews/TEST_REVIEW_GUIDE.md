@@ -10,11 +10,7 @@
 
 ```bash
 cd dev-bootstrap
-bash -n setup.sh lib/*.sh modules/*.sh modules/auth/*.sh tests/*.sh
-bash tests/test_cli.sh
-bash tests/test_phase2.sh
-bash tests/test_phase3.sh
-bash tests/test_phase4.sh
+./scripts/verify.sh
 ```
 
 Linux 테스트 환경에서 일부 테스트가 통과하더라도 macOS 실기기 검증을 대체하지 않는다.

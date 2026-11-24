@@ -189,11 +189,7 @@ PYTHON_INSTALL_METHOD=uv
 ## 9. 테스트 및 확인
 
 ```bash
-bash -n setup.sh lib/*.sh modules/*.sh modules/auth/*.sh tests/*.sh
-bash tests/test_cli.sh
-bash tests/test_phase2.sh
-bash tests/test_phase3.sh
-bash tests/test_phase4.sh
+./scripts/verify.sh
 ./setup.sh doctor
 ```
 

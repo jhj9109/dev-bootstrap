@@ -66,11 +66,7 @@ cp config/repositories.conf.example config/repositories.conf
 ## 테스트
 
 ```bash
-bash -n setup.sh lib/*.sh modules/*.sh modules/auth/*.sh tests/*.sh
-bash tests/test_cli.sh
-bash tests/test_phase2.sh
-bash tests/test_phase3.sh
-bash tests/test_phase4.sh
+./scripts/verify.sh
 ```
 
 테스트는 임시 HOME을 사용합니다. 네트워크 설치와 실제 GitHub 인증을 검증하지 않으며, macOS 실기기에서 추가 확인해야 합니다.
