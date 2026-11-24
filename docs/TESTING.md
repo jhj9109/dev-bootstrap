@@ -14,6 +14,8 @@
 | test_phase3.sh | 모의 nvm/uv 조회, 버전·옵션 검증, .zshrc 중복 방지와 기존 파일 보존 |
 | test_phase4.sh | Workspace 재실행, file URL로 복제, remote 충돌 거부, 네트워크 설치를 끈 all 두 번 실행 |
 
+T02에서 추가한 `test_registry.sh`는 임시 저장소의 모듈 조회, Workspace 반환 코드, 등록 오류와 외부 링크 거부, 실패 시 HOME 보존을 검사한다.
+
 ## 재현
 
 저장소 루트에서 Bash로 실행한다. 각 테스트가 임시 HOME을 준비한다. 복제 테스트의 HTTPS 주소는 로컬 Git fixture로 치환된다. 테스트마다 별도 프로세스로 실행해야 설정과 PATH가 섞이지 않는다.
@@ -21,7 +23,7 @@
 ```bash
 (
   set -e
-  for file in bootstrap.sh setup.sh core/*.sh lib/*.sh modules/*.sh modules/auth/*.sh tests/*.sh; do
+  for file in bootstrap.sh setup.sh core/*.sh lib/*.sh modules/*.sh modules/*/*.sh tests/*.sh; do
     bash -n "$file"
   done
   for file in tests/test_*.sh; do

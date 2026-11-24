@@ -1,11 +1,11 @@
 # 프로젝트 상태
 
-2026-11-24 기준 `refactor/dev-bootstrap-v2`에서 v2 Phase 1의 T01을 완료했다. v1 회귀 검증의 기준 리비전은 `44c15d5`다.
+2026-11-24 기준 `refactor/dev-bootstrap-v2`에서 v2 Phase 1의 T02를 완료했다. v1 회귀 검증의 기준 리비전은 `44c15d5`다.
 
 | 항목 | 현재 상태 |
 |---|---|
-| 완료 | CLI와 메뉴를 `core/cli.sh`, `core/menu.sh`로 분리했다. `setup.sh`가 두 파일을 로드해 기존 명령을 실행한다. |
-| 검증 | Linux의 Bash 5.2.37에서 새 파일을 포함한 문법 검사와 회귀 테스트 스크립트 7개 통과. 임시 HOME에서 `setup.sh`와 `bootstrap.sh` 양쪽의 도움말, 잘못된 인자 종료 코드 2, 메뉴 0번·EOF 종료, 메뉴 2번 설정 재로딩을 확인했다. [테스트 지침](docs/TESTING.md) |
+| 완료 | 시작 시 Registry가 모듈을 탐색하고 등록 정보와 의존 참조를 검증한다. Workspace의 v2 상태 판정은 기존 함수와 별도 어댑터로 연결했다. |
+| 검증 | Linux Bash에서 신규 모듈 포함 문법 검사 및 기존 7개와 Registry 테스트 1개 통과. 두 진입점에서 잘못된 모듈이 사용자 파일 변경 전에 거부되는지 확인했다. [테스트 지침](docs/TESTING.md) |
 | 미검증 및 알려진 제약 | Intel iMac의 기본 Bash 3.2, 실제 설치 및 외부 인증은 수동 확인 대상이다. 다운로드 파일별 독립적인 무결성 검증이 제한적이다. |
 | 검토할 결정 | 프로필에 의존 순서를 명시하는 방식, 단일 apply의 선행 상태 확인, 레거시 INSTALL_* 처리, 편집된 env.zsh의 수동 이관 |
-| 다음 작업 | T02에서 Registry와 첫 모듈 등록을 연결한다. [구현 작업 목록](docs/TASKS.md) |
+| 다음 작업 | T03에서 Workspace를 Runner에 연결한다. [구현 작업 목록](docs/TASKS.md) |
