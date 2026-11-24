@@ -10,15 +10,21 @@ mkdir -p "$HOME/.nvm" "$HOME/.local/bin"
 cat > "$HOME/.nvm/nvm.sh" <<'MOCK'
 nvm() {
   case "$1" in
-    version) printf 'v24.0.0\n';;
-    alias|use|install) return 0;;
+    version)
+      if [[ ${MOCK_NEEDS_INSTALL:-0} == 1 && ! -e $HOME/node-installed ]]; then echo N/A
+      else echo v24.0.0; fi ;;
+    install) touch "$HOME/node-installed" ;;
+    alias|use) return 0;;
     *) return 1;;
   esac
 }
 MOCK
 cat > "$HOME/.local/bin/uv" <<'MOCK'
 #!/usr/bin/env bash
-if [[ "$1" == python && "$2" == find ]]; then printf '/mock/python3.12\n'; exit 0; fi
+if [[ "$1" == python && "$2" == install ]]; then touch "$HOME/python-installed"; exit $?; fi
+if [[ "$1" == python && "$2" == find ]]; then
+  [[ ${MOCK_NEEDS_INSTALL:-0} != 1 || -e $HOME/python-installed ]] || exit 1
+  printf '/mock/python3.12\n'; exit 0; fi
 exit 1
 MOCK
 chmod +x "$HOME/.local/bin/uv"
@@ -27,8 +33,30 @@ printf '# existing user config\n' > "$HOME/.zshrc"
 "$TMP/project/setup.sh" configure shell >/dev/null
 [[ "$(grep -Fc '# Dev Bootstrap managed environment' "$HOME/.zshrc")" == 1 ]]
 grep -q 'existing user config' "$HOME/.zshrc"
-"$TMP/project/setup.sh" install node --version 24 >/dev/null
-"$TMP/project/setup.sh" install python --version 3.12 --method uv >/dev/null
+rm "$HOME/.config/dev-bootstrap/env.zsh"
+"$TMP/project/setup.sh" install node --version 24 > "$TMP/node"
+grep -Fq 'shell: SUCCESS' "$TMP/node"
+rm "$HOME/.config/dev-bootstrap/env.zsh"
+"$TMP/project/setup.sh" install python --version 3.12 --method uv > "$TMP/python"
+grep -Fq 'shell: SUCCESS' "$TMP/python"
+for tool in node npm; do
+  printf '#!/bin/sh\necho mock-version\n' > "$HOME/.local/bin/$tool"
+  chmod +x "$HOME/.local/bin/$tool"
+done
+for tool in node python; do
+  rm "$HOME/.config/dev-bootstrap/env.zsh"
+  PATH="$HOME/.local/bin:$PATH" MOCK_NEEDS_INSTALL=1 "$TMP/project/setup.sh" install "$tool" > "$TMP/install"
+  grep -Fq 'shell: SUCCESS' "$TMP/install"
+  [[ -e "$HOME/$tool-installed" ]]
+done
+printf '# user edit\n' >> "$HOME/.config/dev-bootstrap/env.zsh"
+for tool in node python; do
+  status=0
+  "$TMP/project/setup.sh" install "$tool" > "$TMP/error" 2>&1 || status=$?
+  [[ $status == 1 ]]
+  grep -Fq 'shell: NEEDS_ACTION' "$TMP/error"
+done
+rm "$HOME/.config/dev-bootstrap/env.zsh"
 [[ ! -e "$HOME/Applications" ]]
 "$TMP/project/setup.sh" help | grep -q 'Phase 4'
 printf '0\n' | "$TMP/project/setup.sh" >/dev/null

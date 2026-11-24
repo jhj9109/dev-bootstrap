@@ -125,7 +125,7 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 - Node.js: `~/.nvm`에 nvm을 설치하고 기본 Node 버전을 지정합니다.
 - Python: 기본 방식은 uv입니다. Python은 uv 관리 경로에 설치되며, 일반 `python3` 명령이 즉시 그 버전을 가리킨다는 뜻은 아닙니다. 프로젝트에서는 `uv run`, `uv venv` 등으로 버전을 선택하세요.
 - Python 소스 빌드: 전체 `X.Y.Z` 버전이 필요하고 컴파일 시간이 길 수 있습니다. 설치된 Python 경로를 직접 사용하거나 가상환경을 구성하세요.
-- Shell: 기존 `.zshrc`를 보존하고 `~/.config/dev-bootstrap/env.zsh`를 연결합니다. 변경 후 새 터미널을 열거나 `. ~/.zshrc`를 실행하세요.
+- Shell: 기존 `.zshrc`를 보존하고 `~/.config/dev-bootstrap/env.zsh`를 연결합니다. 관리 파일과 로더가 이미 일치하면 SKIPPED로 종료합니다. 파일 끝에 marker만 남으면 로더를 복구합니다. 편집된 env.zsh나 중복 로더로 NEEDS_ACTION이 표시되면 해당 파일을 검토하세요. 변경 후 새 터미널을 열거나 `. ~/.zshrc`를 실행하세요.
 - iTerm2: 기본적으로 `~/Applications`에 설치합니다. 기존 시스템 iTerm2가 있으면 건너뜁니다.
 
 **주의:** nvm/uv/iTerm2 설치 과정은 외부 배포 파일을 다운로드하여 실행하거나 설치합니다. 현 버전은 배포 아티팩트 체크섬·서명을 별도로 검증하지 않습니다. 교육기관의 보안 정책에 따라 사용 여부를 결정하세요.
