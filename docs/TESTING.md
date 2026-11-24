@@ -21,14 +21,16 @@
 ```bash
 (
   set -e
-  for file in bootstrap.sh setup.sh lib/*.sh modules/*.sh modules/auth/*.sh tests/*.sh; do
+  for file in bootstrap.sh setup.sh core/*.sh lib/*.sh modules/*.sh modules/auth/*.sh tests/*.sh; do
     bash -n "$file"
   done
   for file in tests/test_*.sh; do
-    GIT_ALLOW_PROTOCOL=file GIT_TERMINAL_PROMPT=0 bash "$file"
+    env -i PATH="$PATH" GIT_CONFIG_NOSYSTEM=1 GIT_ALLOW_PROTOCOL=file GIT_TERMINAL_PROMPT=0 bash "$file"
   done
 )
 ```
+
+T01부터 `test_cli.sh`와 `test_menu_reload.sh`는 `setup.sh`와 `bootstrap.sh`를 각각 실행한다. 두 진입점의 도움말, 잘못된 명령·옵션의 종료 코드 2, 메뉴 종료 및 설정 재로딩을 확인한다.
 
 향후 디렉터리 이동 시 문법 검사 대상도 갱신한다. 모의 명령은 정상 반환뿐 아니라 실패·비정상 출력도 주입한다. 설치가 필요한 상태와 진단 명령 실패를 각각 만들고, apply 호출 기록과 HOME 내용·권한을 비교한다. 단계별 추가 검사의 완료 기준은 [이전 계획](REFACTORING_PLAN.md)에 있다.
 
