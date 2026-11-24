@@ -30,6 +30,7 @@ CONF
   exec 3>&-
   wait "$pid"
   pid=''
+  [[ $(grep -c 'git: SUCCESS' "$TMP/output") == 2 ]]
   [[ "$(HOME="$TMP/home" GIT_CONFIG_NOSYSTEM=1 git config --global user.name)" == second-user ]]
   [[ "$(HOME="$TMP/home" GIT_CONFIG_NOSYSTEM=1 git config --global user.email)" == second@example.com ]]
   printf 'PASS: %s interactive menu reloads edited profile config without restart\n' "$1"

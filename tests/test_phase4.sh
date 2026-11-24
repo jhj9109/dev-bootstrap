@@ -70,6 +70,7 @@ printf '\niterm_system_installed() { return 0; }\n' >> "$TMP/project/modules/ite
 printf '#!/bin/sh\necho Darwin\n' > "$TMP/mockbin/uname"
 chmod +x "$TMP/mockbin/uname"
 "$TMP/project/setup.sh" all --profile personal --no-passphrase > "$TMP/all-output"
+grep -Fq 'git: SKIPPED' "$TMP/all-output"
 grep -Fq "iterm: SKIPPED" "$TMP/all-output"
 [[ -f "$HOME/.ssh/dev-bootstrap-personal" ]]
 [[ "$(grep -Fc '# Dev Bootstrap managed environment' "$HOME/.zshrc")" == 1 ]]

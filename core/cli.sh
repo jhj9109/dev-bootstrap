@@ -26,14 +26,23 @@ Node uses nvm, Python uses uv by default; source builds require a full X.Y.Z ver
 USAGE
 }
 parse_options() {
+  local explicit_global=false
   PROFILE="$DEFAULT_GITHUB_PROFILE" METHOD="$DEFAULT_AUTH_METHOD" SCOPE=global REPO='' NO_PASSPHRASE=false
   while (( $# )); do
     case "$1" in
       --profile|--method|--repo)
         local opt="$1"; shift
         [[ $# -gt 0 && -n "$1" && "$1" != --* ]] || { log_error "Missing value for $opt"; return 2; }
-        case "$opt" in --profile) PROFILE="$1";; --method) METHOD="$1";; --repo) REPO="$1"; SCOPE=local;; esac ;;
-      --global) SCOPE=global ;;
+        case "$opt" in
+          --profile) PROFILE="$1" ;;
+          --method) METHOD="$1" ;;
+          --repo)
+            [[ $explicit_global == false ]] || { log_error 'Conflicting Git scopes'; return 2; }
+            REPO="$1"; SCOPE=local ;;
+        esac ;;
+      --global)
+        [[ -z $REPO ]] || { log_error 'Conflicting Git scopes'; return 2; }
+        explicit_global=true; SCOPE=global ;;
       --no-passphrase) NO_PASSPHRASE=true ;;
       *) log_error "Unknown option: $1"; return 2;;
     esac

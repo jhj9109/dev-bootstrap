@@ -1,19 +1,15 @@
 #!/usr/bin/env bash
 configure_git() {
-  local profile="$1" scope="$2" repo="$3"
-  profile_load "$profile" || return $?
-  require_command git || { log_error 'git is required'; return 3; }
-  local args=()
-  case "$scope" in
-    global) args=(config --global) ;;
-    local)
-      [[ -n "$repo" && -d "$repo" ]] || { log_error 'Existing repository path required'; return 2; }
-      git -C "$repo" rev-parse --is-inside-work-tree >/dev/null 2>&1 || { log_error 'Not a Git repository'; return 2; }
-      args=(-C "$repo" config --local) ;;
-    *) return 2;;
+  local identity_profile=$1 identity_scope=$2 identity_repo=$3
+  local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
+  if runner_run git; then
+    log_ok "Git $identity_scope identity configured for $identity_profile"
+    return 0
+  fi
+  case "$RUNNER_STATUS" in BLOCKED|UNSUPPORTED) return 3 ;; esac
+  case "$RUNNER_PHASE:$RUNNER_HOOK_STATUS" in
+    verify:*) return 5 ;;
+    check:2|apply:2) return 2 ;;
+    *) return 1 ;;
   esac
-  git "${args[@]}" user.name "$PROFILE_USER" || return 1
-  git "${args[@]}" user.email "$PROFILE_EMAIL" || return 1
-  [[ "$(git "${args[@]}" user.name)" == "$PROFILE_USER" && "$(git "${args[@]}" user.email)" == "$PROFILE_EMAIL" ]] || return 5
-  log_ok "Git $scope identity configured for $profile"
 }
