@@ -15,7 +15,7 @@
 | ☑ | T04 | iTerm2 설치·검사를 등록하고 기존 install 명령 연결 | 모의 Darwin에서 최초 설치·건너뛰기·다운로드 실패, 미지원 플랫폼에서 다운로드 호출 0회 |
 | ☑ | T05 | Git 작성자 설정을 global/local 범위별로 연결 | local 설정 후 전역 값 보존, 잘못된 저장소 거부 |
 | ☑ | T06 | Shell 모듈에 기존 로더와 .zshrc 상태 검사 연결 | 두 번 적용해 사용자 내용 보존과 단일 로더 확인 |
-| ☐ | T07 | Node 버전과 nvm default alias를 함께 검사 | 요청 버전만 설치된 경우 alias 복구, nvm 조회 오류 시 재설치 방지 |
+| ☑ | T07 | Node 버전과 nvm default alias를 함께 검사 | 요청 버전만 설치된 경우 alias 복구, nvm 조회 오류 시 재설치 방지 |
 | ☐ | T08 | Python의 uv·소스 설치 경로 연결 | 요청 버전·설치 방식 구분, 소스 빌드의 불완전한 버전 거부, 실패 상태 전달 |
 | ☐ | T09 | GitHub의 SSH·gh 경로 및 별도 doctor 연결 | 기존 키 보존, 로컬 설정 완료와 원격 인증 필요 구분, 잘못된 계정 검출 |
 | ☐ | T10 | repository에 목록 복원과 clone/remote 전용 명령 배치 | 로컬 Git fixture로 같은 origin 건너뛰기, 다른 origin 거부, 명시 목적지 보존 |

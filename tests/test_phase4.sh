@@ -64,13 +64,20 @@ MOCK
 chmod +x "$TMP/mockbin/ssh" "$TMP/mockbin/ssh-keygen"
 export PATH="$TMP/mockbin:$PATH"
 "$TMP/project/setup.sh" all --profile personal --no-passphrase >/dev/null
-# Exercise run_all's iTerm2 branch against an isolated system installation.
+# Keep the enabled Node and iTerm2 modules offline on the second run.
+mkdir -p "$HOME/.nvm"
+cat > "$HOME/.nvm/nvm.sh" <<'MOCK'
+[[ $1 == --no-use ]] || return 1
+nvm() { [[ $1 == version ]] && echo v24.7.3; }
+MOCK
+printf 'INSTALL_NODE=true\n' >> "$TMP/project/config/defaults.conf"
 printf 'INSTALL_ITERM=true\n' >> "$TMP/project/config/defaults.conf"
 printf '\niterm_system_installed() { return 0; }\n' >> "$TMP/project/modules/iterm.sh"
 printf '#!/bin/sh\necho Darwin\n' > "$TMP/mockbin/uname"
 chmod +x "$TMP/mockbin/uname"
 "$TMP/project/setup.sh" all --profile personal --no-passphrase > "$TMP/all-output"
 grep -Fq 'shell: SKIPPED' "$TMP/all-output"
+grep -Fq 'node: SKIPPED' "$TMP/all-output"
 grep -Fq 'git: SKIPPED' "$TMP/all-output"
 grep -Fq "iterm: SKIPPED" "$TMP/all-output"
 [[ -f "$HOME/.ssh/dev-bootstrap-personal" ]]

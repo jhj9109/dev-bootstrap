@@ -24,6 +24,8 @@ T05의 `test_git_runner.sh`는 임시 HOME과 연결된 Git worktree에서 globa
 
 T06의 `test_shell_runner.sh`는 v1 템플릿과 실제 로더 줄을 검사하고, 정상 재실행 전후의 파일 내용·inode·수정 시간을 비교한다. 임시 HOME에서 marker만 남은 파일 복구, 중복·편집 파일과 부모 링크 보존, 읽기·복사·교체·사후 검증 실패와 재시도를 확인한다. 실행 여부를 기록하는 .zshrc와 nvm fixture로 진단이 사용자 코드를 실행하는지도 검사한다. Phase 3 테스트는 Node·uv Python의 설치 경로와 이미 설치된 경로에서 Shell Runner 호출을 확인한다.
 
+T07의 `test_node_runner.sh`는 임시 HOME에 모의 nvm을 설치하고 다운로드·설치·use·alias 호출 순서를 기록한다. 부분 버전과 정확한 버전, alias 및 Shell 단독 복구, 조회 오류·Shell 충돌 시 변경 0회, 설치·alias·검증 실패를 검사한다. 모의 nvm은 로딩할 때 작업 디렉터리와 셸 변수를 바꿔 각 훅이 독립적으로 `--no-use`를 사용하는지 확인한다. 메뉴 5번과 all도 같은 Runner를 통과한다.
+
 ## 재현
 
 Git 작업 트리의 루트에서 아래 명령을 실행한다. 다른 디렉터리에서는 스크립트의 경로를 지정한다.

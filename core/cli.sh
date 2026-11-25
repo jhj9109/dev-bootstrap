@@ -74,13 +74,13 @@ run_install() {
   case "$target" in
     node)
       [[ "$INSTALL_METHOD" == "$PYTHON_INSTALL_METHOD" ]] || { log_error '--method is Python-only'; return 2; }
-      local version="${INSTALL_VERSION:-$NODE_VERSION}"
-      if node_check "$version"; then
-        # Ensure default version and future shell sessions work even when installed already.
-        nvm alias default "$version" >/dev/null || return 1
-        shell_configure || return 1
-        log_ok "Node.js $version already installed"
-      else node_install "$version"; fi ;;
+      local node_request="${INSTALL_VERSION:-$NODE_VERSION}"
+      local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
+      runner_run node && return 0
+      case "$RUNNER_PHASE:$RUNNER_HOOK_STATUS" in
+        verify:*|apply:5) return 5 ;;
+        *) return 1 ;;
+      esac ;;
     python)
       local version="${INSTALL_VERSION:-$PYTHON_VERSION}"
       if python_check "$version" "$INSTALL_METHOD"; then

@@ -11,7 +11,7 @@ cat > "$HOME/.nvm/nvm.sh" <<'MOCK'
 nvm() {
   case "$1" in
     version)
-      if [[ ${MOCK_NEEDS_INSTALL:-0} == 1 && ! -e $HOME/node-installed ]]; then echo N/A
+      if [[ ${MOCK_NEEDS_INSTALL:-0} == 1 && ! -e $HOME/node-installed ]]; then echo N/A; return 3
       else echo v24.0.0; fi ;;
     install) touch "$HOME/node-installed" ;;
     alias|use) return 0;;
@@ -54,7 +54,8 @@ for tool in node python; do
   status=0
   "$TMP/project/setup.sh" install "$tool" > "$TMP/error" 2>&1 || status=$?
   [[ $status == 1 ]]
-  grep -Fq 'shell: NEEDS_ACTION' "$TMP/error"
+  if [[ $tool == node ]]; then module=node; else module=shell; fi
+  grep -Fq "$module: NEEDS_ACTION" "$TMP/error"
 done
 rm "$HOME/.config/dev-bootstrap/env.zsh"
 [[ ! -e "$HOME/Applications" ]]
