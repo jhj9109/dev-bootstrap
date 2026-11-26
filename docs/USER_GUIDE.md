@@ -174,15 +174,26 @@ my-account/backend
 other-account/frontend
 ```
 
-이 목록은 `./setup.sh all`을 실행할 때 복제합니다. 각 행은 `OWNER/REPO` 형식이어야 하며 모두 같은 기본 인증 프로필을 사용합니다. 계정별로 다른 프로필이 필요하면 `repo clone --profile ...` 명령을 개별적으로 실행하세요. `all`과 메뉴 10번은 다른 설정 작업을 시작하기 전에 목록 전체의 형식과 목적지 이름을 검사합니다. 같은 행을 반복하거나 저장소 이름이 대소문자만 달라도 거부합니다. 서로 다른 소유자의 동명 저장소는 개별 `repo clone --dest`로 경로를 지정하세요.
+활성 목록에 `repository`가 있으면 `./setup.sh all`이 이 목록을 복원합니다. 각 행은 `OWNER/REPO` 형식이어야 하며 모두 같은 기본 인증 프로필을 사용합니다. 계정별로 다른 프로필이 필요하면 `repo clone --profile ...` 명령을 개별적으로 실행하세요. 복원이 활성화된 경우 `all`과 메뉴 10번은 첫 작업 전에 목록 전체의 형식과 목적지 이름을 검사합니다. 같은 행을 반복하거나 저장소 이름이 대소문자만 달라도 거부합니다. 서로 다른 소유자의 동명 저장소는 개별 `repo clone --dest`로 경로를 지정하세요.
 
 목록 복원은 첫 복제 전에 모든 목적지를 확인합니다. 같은 origin의 저장소는 작업 파일과 설정을 보존하고 건너뜁니다. 새 저장소는 같은 파일시스템의 임시 디렉터리에서 복제와 origin 확인을 마친 뒤 배치합니다. 개별 복제가 실패해도 목록의 나머지 항목은 계속 시도합니다. 다시 실행하면 완료된 저장소를 건너뜁니다. 목적지나 상위 경로에 심볼릭 링크가 있으면 실제 경로를 지정하세요.
 
 ## 8. 전체 실행 설정
 
-`config/defaults.conf`의 값을 수정할 수 있습니다.
+`--environment`는 실행 환경을, `--profile`은 사용할 GitHub 계정을 선택합니다.
 
 ```bash
+./setup.sh all --environment classroom --profile personal
+./setup.sh all --environment minimal --profile personal
+./setup.sh --environment minimal
+```
+
+마지막 명령은 메뉴를 엽니다. 메뉴 10번과 `all`은 활성 모듈을 배열 순서대로 실행합니다. 개별 설치·설정 명령과 메뉴 번호는 계속 직접 선택할 수 있습니다.
+
+`config/defaults.conf`에서 공통 기본값을 지정합니다.
+
+```bash
+DEFAULT_ENVIRONMENT=classroom
 WORKSPACE_DIR="$HOME/Documents"
 DEFAULT_AUTH_METHOD=ssh
 DEFAULT_GITHUB_PROFILE=personal
@@ -194,7 +205,11 @@ INSTALL_PYTHON=true
 PYTHON_INSTALL_METHOD=uv
 ```
 
-설정 파일은 Bash 코드로 로드되므로 출처가 불분명한 설정을 복사하지 마세요. `INSTALL_*`을 `false`로 설정하면 전체 실행에서 해당 설치 단계를 생략합니다. 개별 `install` 명령에는 영향을 주지 않습니다.
+모듈 기본값 위에 공통 defaults, `config/environments/<환경>.conf`, 개인 `config/profiles.conf`를 차례로 적용합니다. 명령행에서 지정한 계정·방식·버전은 해당 실행에 우선합니다. 환경 파일은 명령행의 `--environment`, 생략하면 공통 defaults의 `DEFAULT_ENVIRONMENT`로 고릅니다. 메뉴는 매 선택 시 설정을 다시 읽습니다.
+
+`minimal`의 기본 목록은 `ENABLED_MODULES=(workspace git github shell)`입니다. 환경 파일이나 개인 설정에서 이 형식으로 목록을 바꿀 수 있습니다. 등록된 모듈 ID를 각각 한 번씩 적으세요. 명시한 빈 배열 `ENABLED_MODULES=()`은 전체 실행에서 모든 단계를 건너뜁니다. `classroom`에 목록을 지정하지 않으면 Workspace·Git·GitHub·Shell과 저장소 복원을 포함하고, 기존 `INSTALL_NODE`, `INSTALL_PYTHON`, `INSTALL_ITERM` 중 값이 `true`인 설치 단계를 포함합니다. 명시한 배열이 있으면 그 목록이 우선합니다.
+
+설정 파일은 신뢰할 수 있는 Bash 코드만 사용하세요. 설정 오류는 코드 2로 종료하며, 메뉴 재로딩 중에는 해당 선택을 취소하고 마지막 정상 설정을 보존합니다.
 
 ## 9. 테스트 및 확인
 

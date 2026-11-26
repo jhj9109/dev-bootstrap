@@ -68,6 +68,7 @@ for keys in "${REGISTRY_KEYS[@]}"; do
   read -r -a owned <<< "$keys"
   all_keys+=("${owned[@]}")
 done
+all_keys+=(ENABLED_MODULES)
 declare -p "${all_keys[@]}" > "$tmp/committed"
 reject_load() {
   local rc=0
@@ -98,9 +99,9 @@ mv "$tmp/saved" "$defaults"
   for kind in missing-value partial-value wrong-key duplicate-key extra-field trailing-bytes; do
     case $kind in
       missing-value) printf 'TARGET_OS\0' > "$tmp/wire" ;;
-      partial-value) printf 'TARGET_OS\0macos' > "$tmp/wire" ;;
-      duplicate-key) printf 'TARGET_OS\0wire\0TARGET_OS\0other\0' > "$tmp/wire" ;;
-      wrong-key) printf 'TARGET_OS\0wire\0UNREGISTERED_KEY\0oops\0' > "$tmp/wire" ;;
+      partial-value) printf 'TARGET_OS\0scalar\0macos' > "$tmp/wire" ;;
+      duplicate-key) printf 'TARGET_OS\0scalar\0wire\0TARGET_OS\0scalar\0other\0' > "$tmp/wire" ;;
+      wrong-key) printf 'TARGET_OS\0scalar\0wire\0UNREGISTERED_KEY\0scalar\0oops\0' > "$tmp/wire" ;;
       extra-field) cp "$tmp/complete" "$tmp/wire"; printf '\0' >> "$tmp/wire" ;;
       trailing-bytes) cp "$tmp/complete" "$tmp/wire"; printf 'garbage' >> "$tmp/wire" ;;
     esac

@@ -114,6 +114,16 @@ grep -Fq 'repository: SKIPPED' "$tmp/menu"
 [[ ! -s $TRACE && $(cat "$workspace/one/notes") == keep ]]
 cmp "$tmp/before" "$workspace/one/.git/config"
 
+# With the same account, minimal omits restoration even with a broken manifest.
+cp "$list" "$tmp/valid-list"
+printf '../invalid\n' > "$list"
+expect 0 "$cli" all --environment minimal --profile secondary --no-passphrase
+grep -Fq 'git: SKIPPED' "$tmp/output"
+grep -Fq 'github: SKIPPED' "$tmp/output"
+if grep -Eq '(repository|node|python|iterm):' "$tmp/output"; then exit 1; fi
+[[ ! -s $TRACE ]]
+mv "$tmp/valid-list" "$list"
+
 # A wrong, missing, or unreadable origin cannot trigger a clone in another row.
 printf 'class/missing\nclass/one\n' > "$list"
 repository_method=ssh repository_profile=secondary

@@ -19,6 +19,7 @@ Usage:
   ./setup.sh all [--profile personal|secondary] [--method ssh|gh] [--no-passphrase]
   ./setup.sh help
 
+Select an environment for any command or the menu with --environment classroom|minimal.
 Default GitHub method: ssh. Default Git identity scope: --global.
 --no-passphrase explicitly permits creating an unencrypted SSH private key.
 GitHub key registration is manual. The gh method requires a preinstalled gh CLI.
@@ -125,24 +126,54 @@ run_all() {
   local profile="$1" method="$2" no_passphrase="$3" failures=0
   local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
   local repository_profile=$profile repository_method=$method repository_snapshot
-  repository_snapshot=$(repository_read_list) || return 1
+  local id
+  # Keep the old manifest preflight before any writes, only for a selected restore.
+  for id in ${ENABLED_MODULES[@]+"${ENABLED_MODULES[@]}"}; do
+    if [[ $id == repository ]]; then
+      repository_snapshot=$(repository_read_list) || return 1
+      break
+    fi
+  done
   log_info 'Starting full setup; failures will be summarized'
-  workspace_configure || { log_warn 'Workspace step failed'; failures=$((failures+1)); }
-  configure_git "$profile" global '' || { log_warn 'Git step failed'; failures=$((failures+1)); }
-  configure_github "$profile" "$method" "$no_passphrase" || { log_warn 'GitHub authentication step requires attention'; failures=$((failures+1)); }
-  shell_configure || { log_warn 'Shell step failed'; failures=$((failures+1)); }
-  if [[ "$INSTALL_NODE" == true ]]; then run_install node || { log_warn 'Node step failed'; failures=$((failures+1)); }; fi
-  if [[ "$INSTALL_PYTHON" == true ]]; then run_install python || { log_warn 'Python step failed'; failures=$((failures+1)); }; fi
-  if [[ "$INSTALL_ITERM" == true ]]; then run_install iterm || { log_warn 'iTerm step failed'; failures=$((failures+1)); }; fi
-  runner_run repository || { log_warn 'Repository step failed'; failures=$((failures+1)); }
+  for id in ${ENABLED_MODULES[@]+"${ENABLED_MODULES[@]}"}; do
+    case "$id" in
+      workspace) workspace_configure ;;
+      git) configure_git "$profile" global '' ;;
+      github) configure_github "$profile" "$method" "$no_passphrase" ;;
+      shell) shell_configure ;;
+      node|python|iterm) run_install "$id" ;;
+      *) runner_run "$id" ;;
+    esac || { log_warn "$id step failed"; failures=$((failures+1)); }
+  done
   log_info "Setup finished with $failures failed/attention step(s)"
   (( failures == 0 ))
 }
 main() {
-  load_config "$ROOT_DIR" || return $?
+  local requested_environment=''
+  local -a command=()
+  while (( $# )); do
+    case "$1" in
+      --environment)
+        if [[ -n $requested_environment || $# -lt 2 ]]; then
+          log_error 'Expected one --environment classroom|minimal'; return 2
+        fi
+        config_validate_environment "$2" || return 2
+        requested_environment=$2
+        shift 2 ;;
+      --environment=*) log_error 'Use --environment classroom|minimal'; return 2 ;;
+      --profile|--method|--version|--repo|--dest|--name)
+        # Preserve the original option/value pair for the command parser.
+        [[ ${2-} != --environment ]] || { log_error "Missing value for $1"; return 2; }
+        command+=("$1"); shift
+        if (( $# )); then command+=("$1"); shift; fi ;;
+      *) command+=("$1"); shift ;;
+    esac
+  done
+  set -- ${command[@]+"${command[@]}"}
+  load_config "$ROOT_DIR" "$requested_environment" || return $?
   local action="${1:-}" target="${2:-}"
   case "$action" in
-    '') [[ $# -eq 0 ]] || return 2; menu ;;
+    '') [[ $# -eq 0 ]] || return 2; menu "$requested_environment" ;;
     help|-h|--help) usage ;;
     doctor)
       if [[ $# -eq 1 ]]; then doctor

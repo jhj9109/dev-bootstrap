@@ -8,7 +8,7 @@ menu() {
     # Reload configuration for each menu action so edits made while the menu
     # is open take effect without restarting the process.
     if [[ "$choice" != 0 ]]; then
-      load_config "$ROOT_DIR" || { log_error 'Configuration reload failed; no action taken'; continue; }
+      load_config "$ROOT_DIR" "${1-}" || { log_error 'Configuration reload failed; no action taken'; continue; }
     fi
     case "$choice" in
       1) doctor ;;

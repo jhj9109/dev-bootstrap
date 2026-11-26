@@ -37,6 +37,7 @@ cp config/profiles.conf.example config/profiles.conf
 ./setup.sh repo clone OWNER/REPO --dest /absolute/path
 ./setup.sh repo remote OWNER/REPO --repo /absolute/existing/repo --name origin
 ./setup.sh all --profile personal
+./setup.sh all --environment minimal --profile personal
 ```
 
 기본 Workspace는 `~/Documents`입니다. `repo clone`은 목적지가 존재하고 동일한 `origin`을 가진 Git 저장소라면 건너뜁니다. `repo remote`는 기존 원격 주소가 다를 때 덮어쓰지 않습니다.
@@ -47,11 +48,12 @@ cp config/profiles.conf.example config/profiles.conf
 cp config/repositories.conf.example config/repositories.conf
 ```
 
-`config/repositories.conf`에 `OWNER/REPO`를 한 줄씩 입력하세요. `./setup.sh all` 실행 시 기본 프로필과 인증 방식으로 복제합니다. 복제 목적지 이름이 중복되면 충돌이 발생하므로 별도로 관리하세요.
+`config/repositories.conf`에 `OWNER/REPO`를 한 줄씩 입력하세요. `all`의 활성 목록에 `repository`가 있으면 선택한 프로필과 인증 방식으로 복제합니다. 복제 목적지 이름이 중복되면 충돌이 발생하므로 별도로 관리하세요.
 
 ## 설정 및 보안
 
-- `config/defaults.conf`: 버전 관리되는 기본값. `INSTALL_NODE`, `INSTALL_PYTHON`, `INSTALL_ITERM`을 `false`로 설정하면 `all`에서 제외합니다.
+- `config/defaults.conf`에서 기본 환경을 `DEFAULT_ENVIRONMENT`로 선택합니다. 기본값은 `classroom`입니다.
+- `config/environments/minimal.conf`는 Workspace·Git·GitHub·Shell을 선택합니다. `all`과 메뉴 10번은 `ENABLED_MODULES`의 순서대로 실행합니다. 목록이 미설정인 `classroom`에서는 기존 `INSTALL_NODE`, `INSTALL_PYTHON`, `INSTALL_ITERM`을 적용합니다.
 - `config/profiles.conf`: 개인 GitHub 사용자 이름과 커밋 이메일. `.gitignore`로 제외됩니다.
 - `config/repositories.conf`: 개인 복제 목록. `.gitignore`로 제외됩니다.
 - `.conf` 파일은 Bash로 `source`되므로 **신뢰할 수 있는 내용만** 작성하세요.
@@ -78,7 +80,7 @@ cp config/repositories.conf.example config/repositories.conf
 
 ### Interactive configuration reload (debug fix)
 
-The interactive menu reloads `config/defaults.conf` and `config/profiles.conf` before
+The interactive menu reloads `config/defaults.conf`, the selected environment, and `config/profiles.conf` before
 running each selection. You may edit `profiles.conf` in another editor and choose
 `2. Configure Git identity` without restarting the menu. An invalid configuration
 blocks that selection and displays an error. Configuration files are sourced as
