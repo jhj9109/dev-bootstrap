@@ -6,12 +6,12 @@ shell_loader() { printf '%s' '[ -f "$HOME/.config/dev-bootstrap/env.zsh" ] && . 
 shell_safe_paths() {
   local path
   for path in "$HOME" "$HOME/.config" "$HOME/.config/dev-bootstrap"; do
-    if [[ -L $path || ( -e $path && ( ! -d $path || ! -x $path ) ) ]]; then
+    if [[ -L $path || ( -e $path && ( ! -d $path || ! -O $path || ! -x $path ) ) ]]; then
       log_error "Unsafe shell configuration directory: $path"; return 1
     fi
   done
   for path in "$HOME/.zshrc" "$HOME/.config/dev-bootstrap/env.zsh"; do
-    if [[ -L $path || ( -e $path && ( ! -f $path || ! -r $path ) ) ]]; then
+    if [[ -L $path || ( -e $path && ( ! -f $path || ! -O $path || ! -r $path ) ) ]]; then
       log_error "Cannot safely read $path"; return 1
     fi
   done

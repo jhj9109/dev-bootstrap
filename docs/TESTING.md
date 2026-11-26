@@ -82,6 +82,10 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 
 각 행의 `PASS`는 전체 검증 성공, `FAIL`은 호출 경로 확인 또는 검증 실패, `NOT RUN`은 경로 누락·실행 불가·버전 불일치다. 한 행이 실패해도 다른 행을 시도하며 두 행이 모두 통과해야 종료 코드가 0이다. Linux용 Bash 3.2 결과와 아래 실기기 결과는 따로 기록한다.
 
+## T14 셸 이관
+
+`bash tests/test_shellenv.sh`는 임시 HOME에 v1 템플릿과 사용자 .zshrc를 두고 최종 교체 실패와 재시도를 시험한다. 두 Bash는 이관 함수를 실행하고, 별도 `zsh -f` 프로세스가 실제 .zshrc를 읽어 활성 순서·반복 로드·PATH·비활성 조각 제외를 확인한다. 잘못된 목록과 링크는 첫 조각 실행 전에 거부해야 한다. zsh가 없으면 이관 거부와 원본 보존만 검사하고 실제 zsh 결과는 `NOT RUN`으로 출력한다.
+
 ## Intel iMac 수동 검사
 
 교육장 장비에서 사용자가 승인한 테스트 계정과 별도 HOME을 사용한다. 설치와 실제 인증은 운영자와 일정을 정한 뒤 실행한다.
