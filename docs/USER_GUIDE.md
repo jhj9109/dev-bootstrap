@@ -133,7 +133,7 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 - Node.js: `~/.nvm`에 nvm을 설치하고 기본 Node 버전을 지정합니다.
 - **Python (uv)**은 `3`, `3.12`, `3.12.7`처럼 요청할 수 있습니다. uv가 관리하는 설치 중 요청과 일치하는 릴리스가 있고 Shell 로더도 정상이면 `SKIPPED`입니다. 시스템 Python, 활성 가상환경, 직접 빌드한 Python은 이 판정에서 제외됩니다. 로더만 빠졌으면 Shell만 복구합니다. 조회에는 `uv python find --managed-python --system --show-version`을 오프라인으로 사용합니다. uv가 명시적으로 해당 버전의 미설치를 보고할 때 설치를 시작합니다. 조회 옵션 미지원이나 예상 밖의 응답은 진단 실패로 종료합니다.
 - **Python (Source)**는 전체 `X.Y.Z` 버전이 필요합니다. 설치 대상은 `~/.local/python-X.Y.Z`입니다. 인터프리터를 직접 실행해 표준 라이브러리 로드, 설치 경로와 실제 버전을 검사합니다. 기존 경로에서 검사가 실패하거나 심볼릭 링크가 발견되면 내용을 보존하고 중단합니다. 최초 빌드는 임시 경로에서 설치·검증을 마친 뒤 배치하므로 중간 빌드 실패 후 같은 명령으로 재시도할 수 있습니다. Shell과 PATH는 별도로 관리하며, 설치된 실행 파일을 직접 호출하거나 가상환경을 구성하세요.
-- Shell: 기존 `.zshrc`를 보존하고 `~/.config/dev-bootstrap/env.zsh`를 연결합니다. 관리 파일과 로더가 이미 일치하면 SKIPPED로 종료합니다. 파일 끝에 marker만 남으면 로더를 복구합니다. 편집된 env.zsh나 중복 로더로 NEEDS_ACTION이 표시되면 해당 파일을 검토하세요. 변경 후 새 터미널을 열거나 `. ~/.zshrc`를 실행하세요.
+- Shell: 기존 `.zshrc`를 보존하고 `~/.config/dev-bootstrap/env.zsh`를 연결합니다. 관리 파일과 로더가 이미 일치하면 SKIPPED로 종료합니다. 파일 끝에 marker만 남으면 로더를 복구합니다. 편집된 env.zsh나 중복 로더로 NEEDS_ACTION이 표시되면 해당 파일을 검토하세요. v1 원본은 v2 로더로 이관합니다. `configure shell`과 `all`은 선택한 환경의 Node·uv 조각만 순서대로 활성화합니다. 개별 설치는 다른 활성 조각을 보존하고, Python Source 설치는 PATH를 수정하지 않습니다. 실행 중단 후에는 같은 명령을 다시 실행하세요. 강제 종료 후 `.shell-update` 잠금이 남아 있으면 설정 작업이 끝난 것을 확인한 뒤 `rmdir "$HOME/.config/dev-bootstrap/.shell-update"`로 빈 잠금을 해제하세요. 변경 후 새 터미널을 열거나 `. ~/.zshrc`를 실행하세요.
 - iTerm2: 기본적으로 `~/Applications`에 설치합니다. 기존 시스템 iTerm2가 있으면 건너뜁니다.
 
 **주의:** nvm/uv/iTerm2 설치 과정은 외부 배포 파일을 다운로드하여 실행하거나 설치합니다. 현 버전은 배포 아티팩트 체크섬·서명을 별도로 검증하지 않습니다. 교육기관의 보안 정책에 따라 사용 여부를 결정하세요.

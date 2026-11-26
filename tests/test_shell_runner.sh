@@ -34,7 +34,7 @@ expect_shell 0 'shell: SUCCESS'
 [[ $(mode "$rc") == 640 && $(mode "$managed") == 600 ]]
 printf 'touch "$HOME/ran-rc"\n%s\n%s\n' "$marker" "$loader" > "$tmp/expected"
 cmp "$tmp/expected" "$rc"
-cmp "$project/modules/shell/env.zsh" "$managed"
+cmp "$project/modules/shell/loader.zsh" "$managed"
 # Detect replacement or in-place writes on a no-op run.
 touch -t 200001010101 "$rc" "$managed" "$tmp/expected"
 ln "$rc" "$tmp/rc-inode"
@@ -108,7 +108,7 @@ REAL_CAT=$(command -v cat)
 export REAL_CAT
 cat > "$tmp/bin/cat" <<'MOCK'
 #!/usr/bin/env bash
-case "${1:-}" in */modules/shell/env.zsh) printf 'partial'; exit 1 ;; esac
+case "${1:-}" in */modules/shell/loader.zsh) printf 'partial'; exit 1 ;; esac
 exec "$REAL_CAT" "$@"
 MOCK
 chmod +x "$tmp/bin/cat"
@@ -123,7 +123,7 @@ printf '#!/bin/sh\nexit 1\n' > "$tmp/bin/mv"
 chmod +x "$tmp/bin/mv"
 expect_shell 1 'apply returned 1'
 cmp "$tmp/before" "$rc"
-cmp "$project/modules/shell/env.zsh" "$managed"
+cmp "$project/modules/shell/loader.zsh" "$managed"
 no_temps
 rm "$tmp/bin/mv"
 expect_shell 0 'shell: SUCCESS'

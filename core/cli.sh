@@ -123,6 +123,7 @@ run_workspace() {
   esac
 }
 run_all() {
+  local shell_full_apply=1 selected_shell=0
   local profile="$1" method="$2" no_passphrase="$3" failures=0
   local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
   local repository_profile=$profile repository_method=$method repository_snapshot
@@ -140,15 +141,21 @@ run_all() {
       workspace) workspace_configure ;;
       git) configure_git "$profile" global '' ;;
       github) configure_github "$profile" "$method" "$no_passphrase" ;;
-      shell) shell_configure ;;
+      shell) selected_shell=1; shell_configure ;;
       node|python|iterm) run_install "$id" ;;
       *) runner_run "$id" ;;
     esac || { log_warn "$id step failed"; failures=$((failures+1)); }
   done
+  # A custom environment can omit shell as well as both runtimes. Deactivate
+  # its old fragments without bootstrapping a new shell for an unrelated plan.
+  if [[ $selected_shell == 0 && -f $HOME/.config/dev-bootstrap/env.zsh ]]; then
+    shell_configure || failures=$((failures+1))
+  fi
   log_info "Setup finished with $failures failed/attention step(s)"
   (( failures == 0 ))
 }
 main() {
+  local shell_full_apply=0 shell_target='' migration_rc=''
   local requested_environment=''
   local -a command=()
   while (( $# )); do

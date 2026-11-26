@@ -20,11 +20,13 @@ node_inspect() {
 }
 
 node_check() {
+  local shell_target=node
   local requested_node=${node_request:-$NODE_VERSION} shell_state nvm_state resolved default_version
   node_inspect
 }
 
 node_apply() {
+  local shell_target=node
   local requested_node=${node_request:-$NODE_VERSION} shell_state nvm_state resolved default_version rc=0
   node_inspect || rc=$?
   [[ $rc == 10 ]] || return "$rc"

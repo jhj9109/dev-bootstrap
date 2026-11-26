@@ -35,12 +35,14 @@ python_inspect() {
 }
 
 python_check() {
+  local shell_target=python
   local version=${python_request:-$PYTHON_VERSION} method=${python_method:-$PYTHON_INSTALL_METHOD}
   local uv="$HOME/.local/bin/uv" shell_state uv_state
   python_inspect
 }
 
 python_apply() {
+  local shell_target=python
   local version=${python_request:-$PYTHON_VERSION} method=${python_method:-$PYTHON_INSTALL_METHOD}
   local uv="$HOME/.local/bin/uv" shell_state uv_state rc=0
   python_inspect || rc=$?

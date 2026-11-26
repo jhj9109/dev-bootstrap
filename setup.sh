@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -o pipefail
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)" || exit 1
-for lib in logger common config platform profiles; do
+for lib in logger common config platform profiles shellenv; do
   # shellcheck source=/dev/null
   source "$ROOT_DIR/lib/$lib.sh" || exit 1
 done

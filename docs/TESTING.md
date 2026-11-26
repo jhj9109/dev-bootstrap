@@ -86,6 +86,10 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 
 `bash tests/test_shellenv.sh`는 임시 HOME에 v1 템플릿과 사용자 .zshrc를 두고 최종 교체 실패와 재시도를 시험한다. 두 Bash는 이관 함수를 실행하고, 별도 `zsh -f` 프로세스가 실제 .zshrc를 읽어 활성 순서·반복 로드·PATH·비활성 조각 제외를 확인한다. 잘못된 목록과 링크는 첫 조각 실행 전에 거부해야 한다. zsh가 없으면 이관 거부와 원본 보존만 검사하고 실제 zsh 결과는 `NOT RUN`으로 출력한다.
 
+## T15 및 Phase 4 검증
+
+`tests/test_shell_activation.sh`는 실제 CLI로 v1을 이관하고 classroom → minimal → 개별 uv·Node 설치를 실행한다. 새 zsh에서 .zshrc를 두 번 읽은 후 nvm 함수·NVM_BIN·Node와 uv 명령 경로를 확인한다. 설치 파일과 실행 파일은 로컬 fixture다. 목록 및 관리 조각 교체 실패 후 재시도, 사용자 편집 내용과 비활성 파일 보존, Source 환경의 PATH도 검사한다. Bash 매트릭스가 실행하는 전체 회귀에는 기존 메뉴, CLI, 레거시 설정과 all 재실행이 포함된다. v2 설치·이관의 구문 검사와 이 테스트에는 실제 zsh가 필요하다.
+
 ## Intel iMac 수동 검사
 
 교육장 장비에서 사용자가 승인한 테스트 계정과 별도 HOME을 사용한다. 설치와 실제 인증은 운영자와 일정을 정한 뒤 실행한다.

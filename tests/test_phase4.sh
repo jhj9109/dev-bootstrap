@@ -71,12 +71,14 @@ printf '\niterm_system_installed() { return 0; }\n' >> "$TMP/project/modules/ite
 printf '#!/bin/sh\necho Darwin\n' > "$TMP/mockbin/uname"
 chmod +x "$TMP/mockbin/uname"
 "$TMP/project/setup.sh" all --profile personal --no-passphrase > "$TMP/all-output"
-grep -Fq 'shell: SKIPPED' "$TMP/all-output"
+grep -Fq 'shell: SUCCESS' "$TMP/all-output"
 grep -Fq 'python: SKIPPED' "$TMP/all-output"
 grep -Fq 'node: SKIPPED' "$TMP/all-output"
 grep -Fq 'github: SKIPPED' "$TMP/all-output"
 grep -Fq 'git: SKIPPED' "$TMP/all-output"
 grep -Fq "iterm: SKIPPED" "$TMP/all-output"
+"$TMP/project/setup.sh" all --profile personal --no-passphrase > "$TMP/repeat"
+grep -Fq 'shell: SKIPPED' "$TMP/repeat"
 [[ -f "$HOME/.ssh/dev-bootstrap-personal" ]]
 [[ "$(grep -Fc '# Dev Bootstrap managed environment' "$HOME/.zshrc")" == 1 ]]
 [[ "$(cat "$HOME/Documents/keep.txt")" == keep ]]
