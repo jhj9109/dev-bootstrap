@@ -9,8 +9,8 @@
 ```bash
 git clone https://github.com/OWNER/dev-bootstrap.git # 실제 게시한 저장소 주소로 교체
 cd dev-bootstrap
-cp config/profiles.conf.example config/profiles.conf
-# config/profiles.conf에 사용자명과 이메일을 입력
+cp -n config/accounts.conf.example config/accounts.conf
+# config/accounts.conf에서 사용할 필드의 주석을 풀고 사용자명과 이메일을 입력
 ./setup.sh doctor
 ./setup.sh                  # 대화형 메뉴
 ./setup.sh all              # 전체 구성; 인증 단계에서 사용자 입력 필요
@@ -54,7 +54,7 @@ cp config/repositories.conf.example config/repositories.conf
 
 - `config/defaults.conf`에서 기본 환경을 `DEFAULT_ENVIRONMENT`로 선택합니다. 기본값은 `classroom`입니다.
 - `config/environments/minimal.conf`는 Workspace·Git·GitHub·Shell을 선택합니다. `all`과 메뉴 10번은 `ENABLED_MODULES`의 순서대로 실행합니다. 목록이 미설정인 `classroom`에서는 기존 `INSTALL_NODE`, `INSTALL_PYTHON`, `INSTALL_ITERM`을 적용합니다.
-- `config/profiles.conf`: 개인 GitHub 사용자 이름과 커밋 이메일. `.gitignore`로 제외됩니다.
+- `config/accounts.conf`에는 personal·secondary 계정의 사용자명과 이메일을 지정합니다. 기존 `config/profiles.conf`의 계정 및 개발 설정도 계속 적용됩니다. 같은 계정 필드는 accounts.conf가 우선하며, 명시적인 빈 문자열은 해당 값을 지웁니다. 두 개인 파일은 Git에서 제외됩니다.
 - `config/repositories.conf`: 개인 복제 목록. `.gitignore`로 제외됩니다.
 - `.conf` 파일은 Bash로 `source`되므로 **신뢰할 수 있는 내용만** 작성하세요.
 - SSH 개인키, 액세스 토큰, 비밀번호는 Git에 커밋하지 마세요.
@@ -80,8 +80,8 @@ cp config/repositories.conf.example config/repositories.conf
 
 ### Interactive configuration reload (debug fix)
 
-The interactive menu reloads `config/defaults.conf`, the selected environment, and `config/profiles.conf` before
-running each selection. You may edit `profiles.conf` in another editor and choose
+The interactive menu reloads `config/defaults.conf`, the selected environment, `config/profiles.conf`, and `config/accounts.conf` before
+running each selection. You may edit `accounts.conf` in another editor and choose
 `2. Configure Git identity` without restarting the menu. An invalid configuration
 blocks that selection and displays an error. Configuration files are sourced as
 trusted Bash code; do not load files from untrusted sources.

@@ -52,6 +52,10 @@ T11의 `test_config_registry.sh`는 임시 복제본에 모듈을 추가해 기�
 
 T12의 `test_environments.sh`는 같은 계정의 classroom/minimal 선택, CLI 우선순위, 메뉴 재로딩, 환경 파일이 없는 레거시 classroom과 명시한 빈 배열을 검사한다. 잘못된 ID·중복·희소 배열·잘린 스냅샷을 주입한 뒤 전체 설정을 비교한다. `test_repository_runner.sh`는 같은 계정에서 minimal을 선택하면 잘못된 복제 목록이 있어도 Git·GitHub 단계가 성공하는지 확인한다. 기존 `test_phase4.sh`는 세 레거시 설치 플래그를 끄고 다시 켠 실제 `all` 경로를 검증한다.
 
+## Phase 3 완료 판정
+
+T11의 등록 훅과 T12의 환경별 목록·옵션 우선순위·레거시 `INSTALL_*` 검사를 전체 회귀에 포함한다. T13의 `test_accounts.sh`는 두 개인 파일을 함께 읽어 필드 생략·삭제·빈 값의 차이, 비계정 설정의 격리, 계정 선택 시 검증을 확인한다. 소싱 실패와 배열형 계정 필드를 주입한 뒤 이전 스칼라 및 활성 배열 전체를 비교한다. 메뉴 테스트는 실행 중 개인 파일을 수정해 실제 Git 작성자를 갱신하며 GitHub Runner 테스트는 accounts.conf 단독으로 SSH·gh 경로를 확인한다.
+
 ## 재현
 
 Git 작업 트리의 루트에서 아래 명령을 실행한다. 다른 디렉터리에서는 스크립트의 경로를 지정한다.

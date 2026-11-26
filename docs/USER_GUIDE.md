@@ -33,10 +33,10 @@ chmod +x setup.sh bootstrap.sh  # 필요할 때만
 ### 3.2 개인 계정 설정
 
 ```bash
-cp config/profiles.conf.example config/profiles.conf
+cp -n config/accounts.conf.example config/accounts.conf
 ```
 
-파일을 편집하세요.
+사용할 필드의 주석을 풀고 값을 입력하세요. 기존 `profiles.conf`는 그대로 사용할 수 있습니다. 두 파일이 있으면 `accounts.conf`에 지정한 계정 필드가 우선합니다. 빈 문자열은 값을 지우며, 행을 삭제하면 다음 로딩에서 현재 하위 설정값을 사용합니다.
 
 ```bash
 GITHUB_PERSONAL_USER="my-github-id"
@@ -205,7 +205,7 @@ INSTALL_PYTHON=true
 PYTHON_INSTALL_METHOD=uv
 ```
 
-모듈 기본값 위에 공통 defaults, `config/environments/<환경>.conf`, 개인 `config/profiles.conf`를 차례로 적용합니다. 명령행에서 지정한 계정·방식·버전은 해당 실행에 우선합니다. 환경 파일은 명령행의 `--environment`, 생략하면 공통 defaults의 `DEFAULT_ENVIRONMENT`로 고릅니다. 메뉴는 매 선택 시 설정을 다시 읽습니다.
+모듈 기본값 위에 공통 defaults, `config/environments/<환경>.conf`, 개인 `config/profiles.conf`, 계정 전용 `config/accounts.conf`를 차례로 적용합니다. 명령행에서 지정한 계정·방식·버전은 해당 실행에 우선합니다. 환경 파일은 명령행의 `--environment`, 생략하면 공통 defaults의 `DEFAULT_ENVIRONMENT`로 고릅니다. 메뉴는 매 선택 시 설정을 다시 읽습니다.
 
 `minimal`의 기본 목록은 `ENABLED_MODULES=(workspace git github shell)`입니다. 환경 파일이나 개인 설정에서 이 형식으로 목록을 바꿀 수 있습니다. 등록된 모듈 ID를 각각 한 번씩 적으세요. 명시한 빈 배열 `ENABLED_MODULES=()`은 전체 실행에서 모든 단계를 건너뜁니다. `classroom`에 목록을 지정하지 않으면 Workspace·Git·GitHub·Shell과 저장소 복원을 포함하고, 기존 `INSTALL_NODE`, `INSTALL_PYTHON`, `INSTALL_ITERM` 중 값이 `true`인 설치 단계를 포함합니다. 명시한 배열이 있으면 그 목록이 우선합니다.
 
@@ -224,7 +224,7 @@ PYTHON_INSTALL_METHOD=uv
 
 | 현상 | 확인 및 해결 |
 | --- | --- |
-| `Set GITHUB_...` 오류 | `config/profiles.conf`에 해당 프로필 사용자명과 이메일 입력 |
+| `Set GITHUB_...` 오류 | `config/accounts.conf` 또는 기존 `config/profiles.conf`에서 선택한 계정의 사용자명과 이메일 확인 |
 | SSH 인증 실패 | 공개키 GitHub 등록 여부, Host 별칭, 네트워크 확인 후 `doctor github` |
 | `gh not installed` | `gh`를 별도 설치하거나 기본 SSH 방식 사용 |
 | 기존 저장소 URL 충돌 | `git -C 경로 remote -v`로 확인, 자동 덮어쓰기 없음 |

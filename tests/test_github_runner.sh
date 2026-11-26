@@ -8,7 +8,7 @@ export GIT_CONFIG_GLOBAL="$HOME/.gitconfig"
 project="$tmp/project"
 mkdir -p "$HOME" "$project" "$tmp/outside"
 cp -R "$root"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$project/"
-cat > "$project/config/profiles.conf" <<'CONF'
+cat > "$project/config/accounts.conf" <<'CONF'
 GITHUB_PERSONAL_USER=alice
 GITHUB_PERSONAL_EMAIL=alice@example.com
 GITHUB_SECONDARY_USER=bob

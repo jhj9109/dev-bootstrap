@@ -8,7 +8,7 @@ profile_load() {
   PROFILE_USER="${!user_var:-}"
   PROFILE_EMAIL="${!email_var:-}"
   if [[ -z "$PROFILE_USER" || -z "$PROFILE_EMAIL" ]]; then
-    log_error "Set $user_var and $email_var in config/profiles.conf"
+    log_error "Set $user_var and $email_var in config/accounts.conf (legacy: config/profiles.conf)"
     return 2
   fi
   if [[ ! "$PROFILE_USER" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?$ ]]; then

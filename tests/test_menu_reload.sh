@@ -7,7 +7,7 @@ test_menu_reload() (
   trap '[[ -n "${pid:-}" ]] && kill "$pid" 2>/dev/null || :; rm -rf "$TMP"' EXIT
   cp -R "$ROOT" "$TMP/project"
   mkdir -p "$TMP/home"
-  cat > "$TMP/project/config/profiles.conf" <<'CONF'
+  cat > "$TMP/project/config/$2" <<'CONF'
 GITHUB_PERSONAL_USER="first-user"
 GITHUB_PERSONAL_EMAIL="first@example.com"
 CONF
@@ -22,7 +22,7 @@ CONF
   done
   [[ "$(HOME="$TMP/home" GIT_CONFIG_NOSYSTEM=1 git config --global user.name)" == first-user ]]
   [[ "$(HOME="$TMP/home" GIT_CONFIG_NOSYSTEM=1 git config --global user.email)" == first@example.com ]]
-  cat > "$TMP/project/config/profiles.conf" <<'CONF'
+  cat > "$TMP/project/config/$2" <<'CONF'
 GITHUB_PERSONAL_USER="second-user"
 GITHUB_PERSONAL_EMAIL="second@example.com"
 CONF
@@ -36,5 +36,5 @@ CONF
   printf 'PASS: %s interactive menu reloads edited profile config without restart\n' "$1"
 )
 
-test_menu_reload setup.sh
-test_menu_reload bootstrap.sh
+test_menu_reload setup.sh profiles.conf
+test_menu_reload bootstrap.sh accounts.conf

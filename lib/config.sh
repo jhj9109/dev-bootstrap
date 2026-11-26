@@ -120,6 +120,23 @@ config_apply_snapshot() {
   done
 }
 
+# Called in a process substitution. Only the four account fields cross back
+# into the candidate. An unset field falls through to the current lower layer.
+config_write_accounts() {
+  local key
+  local -a account_fallback=()
+  for key in "${REGISTRY_ACCOUNT_KEYS[@]}"; do account_fallback+=("${!key}"); done
+  readonly -a account_fallback
+  source "$1" >&2 || { log_error 'Cannot load accounts.conf'; return 2; }
+  local i=0
+  for key in "${REGISTRY_ACCOUNT_KEYS[@]}"; do
+    config_plain_scalar "$key" || return 2
+    [[ ${!key+x} ]] || printf -v "$key" '%s' "${account_fallback[i]}" || return 2
+    i=$((i+1))
+  done
+  config_write_snapshot "${REGISTRY_ACCOUNT_KEYS[@]}"
+}
+
 config_write_candidate() (
   local root=$1 file index key
   local -r config_requested_environment=$2
@@ -157,6 +174,11 @@ config_write_candidate() (
   for key in "${REGISTRY_COMMON_KEYS[@]}"; do
     [[ ${!key+x} ]] || printf -v "$key" '%s' '' || return 2
   done
+  file="$root/config/accounts.conf"
+  if [[ -e $file || -L $file ]]; then
+    [[ -f $file ]] || { log_error 'Cannot read accounts.conf'; return 2; }
+    config_apply_snapshot "${REGISTRY_ACCOUNT_KEYS[@]}" < <(config_write_accounts "$file") || return 2
+  fi
   config_resolve_modules || return 2
   case "$TARGET_OS" in macos) ;; *) log_error 'Unsupported TARGET_OS'; return 2 ;; esac
   case "$DEFAULT_AUTH_METHOD" in ssh|gh) ;; *) log_error 'Invalid authentication method'; return 2 ;; esac

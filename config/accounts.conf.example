@@ -1,0 +1,6 @@
+# Copy to accounts.conf for local GitHub usernames and commit emails.
+# Uncomment only the fields to override. An explicit "" clears that field.
+# GITHUB_PERSONAL_USER=""
+# GITHUB_PERSONAL_EMAIL=""
+# GITHUB_SECONDARY_USER=""
+# GITHUB_SECONDARY_EMAIL=""
