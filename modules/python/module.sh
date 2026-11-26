@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+python_inspect() {
+  local prefix="$HOME/.local/python-$version" cmd
+  python_validate_request "$method" "$version" || return $?
+  case "$method" in
+    source)
+      python_safe_directories "$HOME" "$HOME/.local" "$prefix" || return 1
+      if [[ -e $prefix ]]; then
+        python_source_probe "$prefix" || { log_error 'Review existing Python installation'; return 1; }
+        return 0
+      fi
+      for cmd in curl tar make; do require_command "$cmd" || { log_error "Missing $cmd"; return 3; }; done
+      return 10 ;;
+    uv)
+      shell_state=0
+      shell_check || shell_state=$?
+      case "$shell_state" in 0|10) ;; *) return "$shell_state" ;; esac
+      uv_state=0
+      python_uv_status || uv_state=$?
+      [[ $uv_state == 0 ]] || return "$uv_state"
+      return "$shell_state" ;;
+    *) return 2 ;;
+  esac
+}
+
+python_check() {
+  local version=${python_request:-$PYTHON_VERSION} method=${python_method:-$PYTHON_INSTALL_METHOD}
+  local uv="$HOME/.local/bin/uv" shell_state uv_state
+  python_inspect
+}
+
+python_apply() {
+  local version=${python_request:-$PYTHON_VERSION} method=${python_method:-$PYTHON_INSTALL_METHOD}
+  local uv="$HOME/.local/bin/uv" shell_state uv_state rc=0
+  python_inspect || rc=$?
+  [[ $rc == 10 ]] || return "$rc"
+  if [[ $method == source ]]; then python_source_install; return $?; fi
+  if [[ ! -e $uv ]]; then
+    python_bootstrap_uv || return 1
+    [[ -x $uv ]] || return 1
+    uv_state=0
+    python_uv_status || uv_state=$?
+  fi
+  case "$uv_state" in
+    0) ;;
+    10)
+      "$uv" python install "$version" || return 1
+      # Do not publish shell changes for a failed or incomplete installation.
+      if [[ $shell_state == 10 ]]; then python_uv_status || return 5; fi ;;
+    *) return "$uv_state" ;;
+  esac
+  if [[ $shell_state == 10 ]]; then shell_configure || return 1; fi
+}
+
+register_module --id python --name Python --platforms 'Darwin Linux' \
+  --check python_check --apply python_apply --verify python_check

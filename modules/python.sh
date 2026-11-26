@@ -1,48 +1,85 @@
 #!/usr/bin/env bash
-python_check() {
-  local version="$1" method="$2"
-  if [[ "$method" == uv ]]; then
-    [[ -x "$HOME/.local/bin/uv" ]] || return 1
-    "$HOME/.local/bin/uv" python find "$version" --no-python-downloads >/dev/null 2>&1
-  else
-    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
-    [[ -x "$HOME/.local/python-$version/bin/python${version%.*}" ]]
+
+python_validate_request() {
+  if [[ $1 == source && ! $2 =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    log_error 'Source build requires full X.Y.Z version'; return 2
   fi
 }
-python_install() {
-  local version="$1" method="$2" installer='' url='https://astral.sh/uv/install.sh'
-  if [[ "$method" == uv ]]; then
-    if [[ ! -x "$HOME/.local/bin/uv" ]]; then
-      installer="$(mktemp)" || return 1
-      if ! curl --fail --location --show-error --silent --retry 2 "$url" -o "$installer"; then rm -f "$installer"; return 1; fi
-      log_info 'Installing uv using official Astral installer'
-      UV_NO_MODIFY_PATH=1 sh "$installer" || { rm -f "$installer"; return 1; }
-      rm -f "$installer"
+
+python_safe_directories() {
+  local path
+  for path in "$@"; do
+    if [[ -L $path || ( -e $path && ( ! -d $path || ! -x $path ) ) ]]; then
+      log_error "Unsafe Python installation directory: $path"; return 1
     fi
-    "$HOME/.local/bin/uv" python install "$version" || return 1
-    shell_configure || return 1
-    python_check "$version" uv || { log_error 'uv Python verification failed'; return 5; }
-    log_ok "Python available: $($HOME/.local/bin/uv python find "$version" --no-python-downloads)"
-  else
-    python_source_install "$version" || return $?
-  fi
+  done
 }
-python_source_install() {
-  local version="$1" archive='' dir='' prefix='' builddir='' jobs='2'
-  [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { log_error 'Source build requires full X.Y.Z version'; return 2; }
-  for cmd in curl tar make; do require_command "$cmd" || { log_error "Missing $cmd"; return 3; }; done
-  prefix="$HOME/.local/python-$version"
-  [[ ! -L "$prefix" ]] || { log_error 'Refusing symlinked Python prefix'; return 1; }
-  builddir="$(mktemp -d)" || return 1
+
+python_uv_status() {
+  local output rc=0
+  python_safe_directories "$HOME" "$HOME/.local" "$HOME/.local/bin" || return 1
+  if [[ -L $uv || ( -e $uv && ( ! -f $uv || ! -x $uv ) ) ]]; then
+    log_error 'Cannot safely execute ~/.local/bin/uv'; return 1
+  fi
+  if [[ ! -e $uv ]]; then
+    [[ ! -e ${uv}x && ! -L ${uv}x ]] || { log_error 'Preserving existing uvx installation'; return 1; }
+    return 10
+  fi
+  output=$(LC_ALL=C "$uv" python find "$version" --managed-python --system --no-project \
+    --no-python-downloads --no-cache --offline --color never --show-version 2>&1) || rc=$?
+  if [[ $rc == 0 && $output =~ ^[0-9]+\.[0-9]+\.[0-9]+$ &&
+        ( $output == "$version" || $output == "$version".* ) ]]; then return 0; fi
+  if [[ $rc == 2 && $output == "error: No interpreter found for Python $version in managed installations" ]]; then
+    return 10
+  fi
+  log_error "Unexpected uv lookup result for Python $version (exit $rc)"
+  return 1
+}
+
+python_bootstrap_uv() (
+  local installer
+  installer=$(mktemp) || return 1
+  trap 'rm -f -- "$installer"' EXIT
+  curl --fail --location --show-error --silent --retry 2 'https://astral.sh/uv/install.sh' -o "$installer" || return 1
+  log_info 'Installing uv using official Astral installer'
+  UV_INSTALL_DIR="$HOME/.local/bin" UV_NO_MODIFY_PATH=1 sh "$installer" || return 1
+)
+
+python_source_probe() (
+  local prefix=$1 binary="$1/bin/python${version%.*}" actual
+  python_safe_directories "$prefix" "$prefix/bin" || return 1
+  [[ -f $binary && ! -L $binary && -x $binary ]] || return 1
+  # Ignore Python environment overrides, user site and startup hooks. Exercise
+  # the stdlib from the installation and leave bytecode on disk untouched.
+  cd / || return 1
+  actual=$("$binary" -E -s -S -B -c '
+import json, os, sys
+if os.path.realpath(sys.prefix) != os.path.realpath(sys.argv[1]):
+    sys.exit(1)
+print("%d.%d.%d" % sys.version_info[:3])' "$prefix") || return 1
+  [[ $actual == "$version" ]]
+)
+
+python_source_install() (
+  local prefix="$HOME/.local/python-$version" builddir archive dir staged jobs=2
+  mkdir -p "$HOME/.local" && cd -P -- "$HOME/.local" || return 1
+  python_safe_directories "$HOME" "$HOME/.local" || return 1
+  builddir=$(mktemp -d .python-build.XXXXXXXX) || return 1
+  trap 'rm -rf -- "$builddir"' EXIT
   archive="$builddir/Python-$version.tgz"
   dir="$builddir/Python-$version"
-  if ! curl --fail --location --show-error --silent --retry 2 "https://www.python.org/ftp/python/$version/Python-$version.tgz" -o "$archive"; then rm -rf "$builddir"; return 1; fi
-  # Extract only the official archive into an isolated temporary directory.
-  if ! tar -xzf "$archive" -C "$builddir" || [[ ! -f "$dir/configure" ]]; then rm -rf "$builddir"; return 1; fi
-  if require_command sysctl; then jobs="$(sysctl -n hw.ncpu 2>/dev/null || printf 2)"; fi
-  [[ "$jobs" =~ ^[1-9][0-9]*$ ]] || jobs=2
-  (cd "$dir" && ./configure --prefix="$prefix" && make -j "$jobs" && make install) || { log_error 'Python source build failed'; rm -rf "$builddir"; return 1; }
-  rm -rf "$builddir"
-  python_check "$version" source || { log_error 'Python source build verification failed'; return 5; }
-  log_ok "Python installed at $prefix (not added to PATH; use its full path or venv)"
-}
+  staged="$PWD/$builddir/stage"
+  curl --fail --location --show-error --silent --retry 2 "https://www.python.org/ftp/python/$version/Python-$version.tgz" -o "$archive" || return 1
+  tar -xzf "$archive" -C "$builddir" || return 1
+  [[ ! -L $dir && -f $dir/configure && ! -L $dir/configure ]] || return 1
+  if require_command sysctl; then jobs=$(sysctl -n hw.ncpu 2>/dev/null) || jobs=2; fi
+  [[ $jobs =~ ^[1-9][0-9]*$ ]] || jobs=2
+  (cd "$dir" && ./configure --prefix="$prefix" && make -j "$jobs" && make install DESTDIR="$staged") || {
+    log_error 'Python source build failed'; return 1
+  }
+  python_source_probe "$staged$prefix" || { log_error 'Staged Python failed verification'; return 5; }
+  python_safe_directories "$HOME" "$HOME/.local" || return 1
+  [[ . -ef "$HOME/.local" && ! -e $prefix && ! -L $prefix ]] || return 1
+  mv -n "$staged$prefix" . || return 1
+  [[ ! -e $staged$prefix ]] || return 1
+)

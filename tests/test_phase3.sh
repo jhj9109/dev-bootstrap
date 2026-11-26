@@ -23,8 +23,10 @@ cat > "$HOME/.local/bin/uv" <<'MOCK'
 #!/usr/bin/env bash
 if [[ "$1" == python && "$2" == install ]]; then touch "$HOME/python-installed"; exit $?; fi
 if [[ "$1" == python && "$2" == find ]]; then
-  [[ ${MOCK_NEEDS_INSTALL:-0} != 1 || -e $HOME/python-installed ]] || exit 1
-  printf '/mock/python3.12\n'; exit 0; fi
+  if [[ ${MOCK_NEEDS_INSTALL:-0} == 1 && ! -e $HOME/python-installed ]]; then
+    echo "error: No interpreter found for Python $3 in managed installations" >&2; exit 2
+  fi
+  printf '3.12.7\n'; exit 0; fi
 exit 1
 MOCK
 chmod +x "$HOME/.local/bin/uv"
@@ -54,8 +56,7 @@ for tool in node python; do
   status=0
   "$TMP/project/setup.sh" install "$tool" > "$TMP/error" 2>&1 || status=$?
   [[ $status == 1 ]]
-  if [[ $tool == node ]]; then module=node; else module=shell; fi
-  grep -Fq "$module: NEEDS_ACTION" "$TMP/error"
+  grep -Fq "$tool: NEEDS_ACTION" "$TMP/error"
 done
 rm "$HOME/.config/dev-bootstrap/env.zsh"
 [[ ! -e "$HOME/Applications" ]]

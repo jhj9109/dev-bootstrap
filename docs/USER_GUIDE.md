@@ -123,8 +123,8 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 ```
 
 - Node.js: `~/.nvm`에 nvm을 설치하고 기본 Node 버전을 지정합니다.
-- Python: 기본 방식은 uv입니다. Python은 uv 관리 경로에 설치되며, 일반 `python3` 명령이 즉시 그 버전을 가리킨다는 뜻은 아닙니다. 프로젝트에서는 `uv run`, `uv venv` 등으로 버전을 선택하세요.
-- Python 소스 빌드: 전체 `X.Y.Z` 버전이 필요하고 컴파일 시간이 길 수 있습니다. 설치된 Python 경로를 직접 사용하거나 가상환경을 구성하세요.
+- **Python (uv)**은 `3`, `3.12`, `3.12.7`처럼 요청할 수 있습니다. uv가 관리하는 설치 중 요청과 일치하는 릴리스가 있고 Shell 로더도 정상이면 `SKIPPED`입니다. 시스템 Python, 활성 가상환경, 직접 빌드한 Python은 이 판정에서 제외됩니다. 로더만 빠졌으면 Shell만 복구합니다. 조회에는 `uv python find --managed-python --system --show-version`을 오프라인으로 사용합니다. uv가 명시적으로 해당 버전의 미설치를 보고할 때 설치를 시작합니다. 조회 옵션 미지원이나 예상 밖의 응답은 진단 실패로 종료합니다.
+- **Python (Source)**는 전체 `X.Y.Z` 버전이 필요합니다. 설치 대상은 `~/.local/python-X.Y.Z`입니다. 인터프리터를 직접 실행해 표준 라이브러리 로드, 설치 경로와 실제 버전을 검사합니다. 기존 경로에서 검사가 실패하거나 심볼릭 링크가 발견되면 내용을 보존하고 중단합니다. 최초 빌드는 임시 경로에서 설치·검증을 마친 뒤 배치하므로 중간 빌드 실패 후 같은 명령으로 재시도할 수 있습니다. Shell과 PATH는 별도로 관리하며, 설치된 실행 파일을 직접 호출하거나 가상환경을 구성하세요.
 - Shell: 기존 `.zshrc`를 보존하고 `~/.config/dev-bootstrap/env.zsh`를 연결합니다. 관리 파일과 로더가 이미 일치하면 SKIPPED로 종료합니다. 파일 끝에 marker만 남으면 로더를 복구합니다. 편집된 env.zsh나 중복 로더로 NEEDS_ACTION이 표시되면 해당 파일을 검토하세요. 변경 후 새 터미널을 열거나 `. ~/.zshrc`를 실행하세요.
 - iTerm2: 기본적으로 `~/Applications`에 설치합니다. 기존 시스템 iTerm2가 있으면 건너뜁니다.
 
@@ -203,7 +203,7 @@ PYTHON_INSTALL_METHOD=uv
 | SSH 인증 실패 | 공개키 GitHub 등록 여부, Host 별칭, 네트워크 확인 후 `doctor github` |
 | `gh not installed` | `gh`를 별도 설치하거나 기본 SSH 방식 사용 |
 | 기존 저장소 URL 충돌 | `git -C 경로 remote -v`로 확인, 자동 덮어쓰기 없음 |
-| Python 설치했지만 `python3` 버전이 다름 | uv 관리 Python과 시스템 Python은 별개. `uv python find 3.12`, `uv venv` 활용 |
+| Python 설치했지만 `python3` 버전이 다름 | uv 관리 Python과 시스템 Python은 별개. `uv python find 3.12 --managed-python --system`, `uv venv` 활용 |
 | Node 명령이 새 터미널에 없음 | `./setup.sh configure shell` 실행 후 새 zsh 시작 |
 | `all`이 일부 실패 | 로그에서 실패 모듈 확인 후 개별 명령으로 재시도 |
 | SSH 공개키가 매주 늘어남 | GitHub Settings에서 더 이상 사용하지 않는 키를 확인해 삭제 |

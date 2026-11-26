@@ -82,11 +82,16 @@ run_install() {
         *) return 1 ;;
       esac ;;
     python)
-      local version="${INSTALL_VERSION:-$PYTHON_VERSION}"
-      if python_check "$version" "$INSTALL_METHOD"; then
-        [[ "$INSTALL_METHOD" == uv ]] && shell_configure || [[ "$INSTALL_METHOD" == source ]] || return 1
-        log_ok "Python $version already installed ($INSTALL_METHOD)"
-      else python_install "$version" "$INSTALL_METHOD"; fi ;;
+      local python_request="${INSTALL_VERSION:-$PYTHON_VERSION}" python_method="$INSTALL_METHOD"
+      local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
+      python_validate_request "$python_method" "$python_request" || return $?
+      runner_run python && return 0
+      case "$RUNNER_PHASE:$RUNNER_HOOK_STATUS" in
+        verify:*|apply:5) return 5 ;;
+        check:2|apply:2) return 2 ;;
+        check:3|apply:3) return 3 ;;
+        *) return 1 ;;
+      esac ;;
     iterm)
       [[ -z "$INSTALL_VERSION" && "$INSTALL_METHOD" == "$PYTHON_INSTALL_METHOD" ]] || { log_error 'iTerm2 accepts no options'; return 2; }
       local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
