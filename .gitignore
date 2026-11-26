@@ -3,3 +3,4 @@ config/profiles.conf
 .DS_Store
 config/repositories.conf
 config/accounts.conf
+/CHECKPOINT.md

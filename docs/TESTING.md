@@ -70,6 +70,18 @@ T01부터 `test_cli.sh`와 `test_menu_reload.sh`는 `setup.sh`와 `bootstrap.sh`
 
 향후 디렉터리 이동 시 문법 검사 대상도 갱신한다. 모의 명령은 정상 반환뿐 아니라 실패·비정상 출력도 주입한다. 설치가 필요한 상태와 진단 명령 실패를 각각 만들고, apply 호출 기록과 HOME 내용·권한을 비교한다. 단계별 추가 검사의 완료 기준은 [이전 계획](REFACTORING_PLAN.md)에 있다.
 
+## Bash 버전별 전체 검증
+
+이미 준비된 두 Bash 실행 파일의 경로를 지정한다. 아래 경로는 예시다. 매트릭스는 설치나 다운로드 없이 실행된다.
+
+```bash
+BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-matrix.sh
+```
+
+각 행은 실행 파일에서 읽은 버전을 검사하고 임시 PATH의 첫 `bash`를 해당 파일에 연결한다. `/usr/bin/env bash` 진입점과 그 안에서 호출한 `bash`의 버전·실행 파일을 대조한 뒤 기존 `verify.sh` 전체를 실행한다. 임시 HOME의 테스트에도 같은 PATH를 전달한다.
+
+각 행의 `PASS`는 전체 검증 성공, `FAIL`은 호출 경로 확인 또는 검증 실패, `NOT RUN`은 경로 누락·실행 불가·버전 불일치다. 한 행이 실패해도 다른 행을 시도하며 두 행이 모두 통과해야 종료 코드가 0이다. Linux용 Bash 3.2 결과와 아래 실기기 결과는 따로 기록한다.
+
 ## Intel iMac 수동 검사
 
 교육장 장비에서 사용자가 승인한 테스트 계정과 별도 HOME을 사용한다. 설치와 실제 인증은 운영자와 일정을 정한 뒤 실행한다.
