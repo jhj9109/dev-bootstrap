@@ -35,6 +35,19 @@ register_module --id sample --name "예제 도구" --platforms "Darwin Linux" \
 
 `--id/--name/--platforms/--check/--apply/--verify`는 필수다. `--depends "workspace git"`는 공백 구분 ID 목록으로 기본값은 빈 목록이다. 설정이 있으면 `--keys/--defaults/--validate`를 함께 등록한다. 키는 모듈별 접두사가 있는 대문자 스칼라이며 공통 키 및 셸 예약 이름과 충돌하면 등록 실패다. 환경의 ENABLED_MODULES 배열은 Planner 입력이다. 특수 명령은 별도 등록한 작업 함수에 원본 인자 배열을 넘긴다.
 
+### T16 일괄 실행 계획
+
+`--depends`에는 일괄 실행에서 먼저 끝나야 하는 모듈 ID를 등록한다. `--depends-if 'PYTHON_INSTALL_METHOD=uv'`처럼 조건을 붙이면 모듈 자신이 등록한 설정 키가 지정한 값과 일치할 때만 해당 선행 목록 전체를 사용한다. Registry는 조건의 키와 모든 참조 ID를 검사하고 Planner는 확정된 설정값으로 조건을 해석한다. `--prerequisites`는 실행에 필요한 도구와 접근 권한을 설명하는 표시용 텍스트다.
+
+| 대상 | 일괄 계획의 선행 모듈 | 실행 시 필요한 조건 |
+|---|---|---|
+| Node | shell | nvm이 없으면 curl과 Bash로 설치한다. |
+| Python | uv 방식이면 shell, source 방식이면 없음 | 소스 설치에는 패치 버전까지 지정한 Python과 빌드 도구가 필요하다. |
+| Repository | workspace | 목록 복원은 기본 목적지를 사용한다. 복제에는 Git 실행 파일과 대상 저장소 읽기 권한이 필요하다. SSH 로컬 설정 후에도 원격 키 등록이 필요할 수 있다. |
+| Git, GitHub, Shell, iTerm2, Workspace | 없음 | Git 작성자 설정과 원격 인증은 별도 작업이다. gh 인증과 셸 조각 관리에서 사용하는 Git은 실행 파일 요구사항이다. |
+
+Planner는 확정된 `ENABLED_MODULES`의 순서와 범위를 보존한다. 선택된 의존성이 빠졌거나 뒤에 있으면, 또는 ID 중복·자기 참조·순환이 있으면 코드 2로 중단한다. `plan`과 `all --dry-run`은 같은 경로에서 모든 검증에 성공한 뒤 계획을 출력한다. 표시된 플랫폼·외부 도구·원격 권한은 실행 조건이며 조회 시 설치 상태나 인증 여부를 검사하지 않는다. 기존 개별 명령은 환경 목록과 독립적으로 실행하며 Node·uv의 개별 Shell 복구와 명시적 목적지의 복제 동작을 유지한다.
+
 ### T11 설정 소유권과 재로딩
 
 Workspace는 `WORKSPACE_DIR`, Node는 `NODE_VERSION`, Python은 `PYTHON_VERSION`과 `PYTHON_INSTALL_METHOD`를 등록한다. 여러 모듈이 공유하는 대상 OS·기본 계정·인증 방식·기존 계정 필드와 `all`의 세 `INSTALL_*` 플래그는 공통 설정이다. Registry는 공통 키, 셸·실행 문맥의 예약 이름, 이미 등록된 키를 거부한다.

@@ -60,4 +60,5 @@ repository_apply() {
 }
 
 register_module --id repository --name Repository --platforms 'Darwin Linux' --depends workspace \
+  --prerequisites 'Cloning needs Git and remote read access (SSH alias and registered key, or HTTPS access for the gh method).' \
   --check repository_check --apply repository_apply --verify repository_check

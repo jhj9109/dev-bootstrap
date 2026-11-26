@@ -66,5 +66,7 @@ python_apply() {
 }
 
 register_module --id python --name Python --platforms 'Darwin Linux' \
+  --depends shell --depends-if 'PYTHON_INSTALL_METHOD=uv' \
   --keys 'PYTHON_VERSION PYTHON_INSTALL_METHOD' --defaults python_defaults --validate python_validate \
+  --prerequisites 'uv bootstrap needs curl. A source build needs a full X.Y.Z version, curl, tar, make and a C toolchain.' \
   --check python_check --apply python_apply --verify python_check

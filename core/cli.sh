@@ -16,7 +16,8 @@ Usage:
   ./setup.sh configure workspace
   ./setup.sh repo clone OWNER/REPO [--profile personal|secondary] [--method ssh|gh] [--dest ABS_PATH]
   ./setup.sh repo remote OWNER/REPO --repo PATH [--name origin] [--profile personal|secondary] [--method ssh|gh]
-  ./setup.sh all [--profile personal|secondary] [--method ssh|gh] [--no-passphrase]
+  ./setup.sh plan [--profile personal|secondary] [--method ssh|gh] [--no-passphrase]
+  ./setup.sh all [--dry-run] [--profile personal|secondary] [--method ssh|gh] [--no-passphrase]
   ./setup.sh help
 
 Select an environment for any command or the menu with --environment classroom|minimal.
@@ -27,7 +28,8 @@ Node uses nvm, Python uses uv by default; source builds require a full X.Y.Z ver
 USAGE
 }
 parse_options() {
-  local explicit_global=false
+  local command_name=$1 explicit_global=false
+  shift
   PROFILE="$DEFAULT_GITHUB_PROFILE" METHOD="$DEFAULT_AUTH_METHOD" SCOPE=global REPO='' NO_PASSPHRASE=false
   while (( $# )); do
     case "$1" in
@@ -41,6 +43,9 @@ parse_options() {
             [[ $explicit_global == false ]] || { log_error 'Conflicting Git scopes'; return 2; }
             REPO="$1"; SCOPE=local ;;
         esac ;;
+      --dry-run)
+        [[ $command_name == all && $dry_run == false ]] || { log_error 'Unexpected --dry-run'; return 2; }
+        dry_run=true ;;
       --global)
         [[ -z $REPO ]] || { log_error 'Conflicting Git scopes'; return 2; }
         explicit_global=true; SCOPE=global ;;
@@ -123,11 +128,12 @@ run_workspace() {
   esac
 }
 run_all() {
-  local shell_full_apply=1 selected_shell=0
+  local shell_full_apply=1
   local profile="$1" method="$2" no_passphrase="$3" failures=0
   local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
   local repository_profile=$profile repository_method=$method repository_snapshot
   local id
+  planner_validate || return $?
   # Keep the old manifest preflight before any writes, only for a selected restore.
   for id in ${ENABLED_MODULES[@]+"${ENABLED_MODULES[@]}"}; do
     if [[ $id == repository ]]; then
@@ -141,22 +147,17 @@ run_all() {
       workspace) workspace_configure ;;
       git) configure_git "$profile" global '' ;;
       github) configure_github "$profile" "$method" "$no_passphrase" ;;
-      shell) selected_shell=1; shell_configure ;;
+      shell) shell_configure ;;
       node|python|iterm) run_install "$id" ;;
       *) runner_run "$id" ;;
     esac || { log_warn "$id step failed"; failures=$((failures+1)); }
   done
-  # A custom environment can omit shell as well as both runtimes. Deactivate
-  # its old fragments without bootstrapping a new shell for an unrelated plan.
-  if [[ $selected_shell == 0 && -f $HOME/.config/dev-bootstrap/env.zsh ]]; then
-    shell_configure || failures=$((failures+1))
-  fi
   log_info "Setup finished with $failures failed/attention step(s)"
   (( failures == 0 ))
 }
 main() {
   local shell_full_apply=0 shell_target='' migration_rc=''
-  local requested_environment=''
+  local requested_environment='' dry_run=false
   local -a command=()
   while (( $# )); do
     case "$1" in
@@ -184,7 +185,7 @@ main() {
     help|-h|--help) usage ;;
     doctor)
       if [[ $# -eq 1 ]]; then doctor
-      elif [[ "$target" == github ]]; then shift 2; parse_options "$@" || return $?; github_doctor "$PROFILE" "$METHOD"
+      elif [[ "$target" == github ]]; then shift 2; parse_options "$action" "$@" || return $?; github_doctor "$PROFILE" "$METHOD"
       else usage; return 2; fi ;;
     repo)
       [[ $# -ge 3 ]] || { usage; return 2; }
@@ -210,9 +211,13 @@ main() {
         remote) [[ -n "$REPO" && -z "$dest" ]] || { log_error 'remote requires --repo PATH'; return 2; }; repo_remote "$REPO" "$spec" "$PROFILE" "$METHOD" "$name" ;;
         *) log_error 'Unknown repo operation'; return 2;;
       esac ;;
-    all)
-      shift; parse_options "$@" || return $?
+    plan|all)
+      shift; parse_options "$action" "$@" || return $?
       [[ "$SCOPE" == global && -z "$REPO" ]] || return 2
+      if [[ $action == plan || $dry_run == true ]]; then
+        planner_print "$PROFILE" "$METHOD" "$NO_PASSPHRASE"
+        return $?
+      fi
       run_all "$PROFILE" "$METHOD" "$NO_PASSPHRASE" ;;
     install)
       [[ $# -ge 2 ]] || { usage; return 2; }
@@ -227,7 +232,7 @@ main() {
         [[ $# -eq 2 ]] || { log_error 'Shell accepts no options'; return 2; }
         shell_configure; return $?
       fi
-      shift 2; parse_options "$@" || return $?
+      shift 2; parse_options "$action" "$@" || return $?
       case "$target" in
         git) [[ "$NO_PASSPHRASE" == false && "$METHOD" == "$DEFAULT_AUTH_METHOD" ]] || { log_error 'Unsupported Git option'; return 2; }; configure_git "$PROFILE" "$SCOPE" "$REPO" ;;
         github) [[ "$SCOPE" == global && -z "$REPO" ]] || { log_error '--repo is not supported for GitHub auth'; return 2; }; configure_github "$PROFILE" "$METHOD" "$NO_PASSPHRASE" ;;

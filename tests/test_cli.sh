@@ -21,6 +21,10 @@ for script in setup.sh bootstrap.sh; do
     HOME="$test_home" "$entry" "$help_option" >"$TMP/output"
     grep -q 'Phase 4' "$TMP/output"
   done
+  expect_usage_error plan --repo somewhere
+  expect_usage_error all --dry-run --dry-run
+  expect_usage_error all --method --dry-run
+  expect_usage_error configure github --dry-run
   expect_usage_error bogus
   expect_usage_error install node --version
   expect_usage_error configure git --unknown

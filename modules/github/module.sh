@@ -19,4 +19,5 @@ github_apply() {
 }
 
 register_module --id github --name GitHub --platforms 'Darwin Linux' \
+  --prerequisites 'SSH setup needs ssh and ssh-keygen; remote access needs a registered key. The gh method needs gh, Git and the selected account.' \
   --check github_check --apply github_apply --verify github_check

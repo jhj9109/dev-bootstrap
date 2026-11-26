@@ -90,6 +90,10 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 
 `tests/test_shell_activation.sh`는 실제 CLI로 v1을 이관하고 classroom → minimal → 개별 uv·Node 설치를 실행한다. 새 zsh에서 .zshrc를 두 번 읽은 후 nvm 함수·NVM_BIN·Node와 uv 명령 경로를 확인한다. 설치 파일과 실행 파일은 로컬 fixture다. 목록 및 관리 조각 교체 실패 후 재시도, 사용자 편집 내용과 비활성 파일 보존, Source 환경의 PATH도 검사한다. Bash 매트릭스가 실행하는 전체 회귀에는 기존 메뉴, CLI, 레거시 설정과 all 재실행이 포함된다. v2 설치·이관의 구문 검사와 이 테스트에는 실제 zsh가 필요하다.
 
+## T16 실행 계획
+
+`tests/test_planner.sh`는 임시 저장소에 복수 선행 모듈이 있는 그래프를 등록하고 두 CLI 진입점의 계획 출력과 종료 코드를 대조한다. 정상 사용자 순서, 누락·역순·중복·미등록 ID·자기 참조·순환, 실제 Node·Python 설치 방식별 Shell 관계와 Repository의 Workspace 관계를 검사한다. 매 요청 전후에 기존 로더·활성 목록·사용자 파일·링크·권한을 포함한 HOME 아카이브를 비교하고, 실행 훅과 설치·인증 도구 호출 기록이 비어 있는지 확인한다. 빈 배열에 대해서는 실제 `all`도 같은 HOME을 보존해야 한다.
+
 ## Intel iMac 수동 검사
 
 교육장 장비에서 사용자가 승인한 테스트 계정과 별도 HOME을 사용한다. 설치와 실제 인증은 운영자와 일정을 정한 뒤 실행한다.

@@ -35,20 +35,21 @@ registry_error() {
 }
 
 register_module() {
-  local id='' name='' platforms='' check='' apply='' verify='' depends=''
+  local id='' name='' platforms='' check='' apply='' verify='' depends='' depends_if='' prerequisites=''
   local keys='' defaults='' validate='' seen=' ' option field hook word prefix
   local LC_ALL=C
   local -a words
   while (( $# )); do
     option=$1
     case "$option" in
-      --id|--name|--platforms|--check|--apply|--verify|--depends|--keys|--defaults|--validate) ;;
+      --id|--name|--platforms|--check|--apply|--verify|--depends|--depends-if|--prerequisites|--keys|--defaults|--validate) ;;
       *) registry_error "Unknown module option $option"; return 2 ;;
     esac
     if (( $# < 2 )) || [[ -z $2 || $2 == --* || $seen == *" $option "* ]]; then
       registry_error "Invalid or repeated option $option"; return 2
     fi
     field=${option#--}
+    field=${field//-/_}
     printf -v "$field" '%s' "$2"
     seen="$seen$option "
     shift 2
@@ -90,6 +91,13 @@ register_module() {
       esac
     done
   done
+  # A condition may only compare a scalar owned by this module.
+  if [[ -n $depends_if ]]; then
+    if [[ -z $depends || ! $depends_if =~ ^[A-Z][A-Z0-9_]*=[a-zA-Z0-9_]+$ ||
+          " $keys " != *" ${depends_if%%=*} "* ]]; then
+      registry_error "Invalid dependency condition: $depends_if"; return 2
+    fi
+  fi
   REGISTRY_IDS+=("$id")
   REGISTRY_NAMES+=("$name")
   REGISTRY_PLATFORMS+=("$platforms")
@@ -97,6 +105,8 @@ register_module() {
   REGISTRY_APPLY+=("$apply")
   REGISTRY_VERIFY+=("$verify")
   REGISTRY_DEPENDS+=("$depends")
+  REGISTRY_DEPENDS_IF+=("$depends_if")
+  REGISTRY_PREREQUISITES+=("$prerequisites")
   REGISTRY_KEYS+=("$keys")
   REGISTRY_DEFAULTS+=("$defaults")
   REGISTRY_VALIDATE+=("$validate")
@@ -108,7 +118,7 @@ discover_modules() {
   local registry_invalid=0
   local registry_claimed_keys=" ${REGISTRY_COMMON_KEYS[*]} "
   root=$(cd -P -- "$1" && pwd -P) || return 2
-  REGISTRY_IDS=() REGISTRY_NAMES=() REGISTRY_PLATFORMS=() REGISTRY_DEPENDS=()
+  REGISTRY_IDS=() REGISTRY_NAMES=() REGISTRY_PLATFORMS=() REGISTRY_DEPENDS=() REGISTRY_DEPENDS_IF=() REGISTRY_PREREQUISITES=()
   REGISTRY_CHECK=() REGISTRY_APPLY=() REGISTRY_VERIFY=()
   REGISTRY_KEYS=() REGISTRY_DEFAULTS=() REGISTRY_VALIDATE=()
   for registry_entry in "$root"/modules/*/module.sh; do

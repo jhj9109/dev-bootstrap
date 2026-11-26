@@ -67,6 +67,10 @@ write_module "$valid" 'return 1'
 reject 'Module load failed'
 write_module "$valid --depends missing"
 reject 'unknown dependency'
+write_module "$valid --depends-if SAMPLE_METHOD=uv"
+reject 'Invalid dependency condition'
+write_module "$valid --depends workspace --depends-if PATH=x"
+reject 'Invalid dependency condition'
 write_module "${valid/Linux/Plan9}"
 reject 'Unknown platform'
 write_module "$valid --unknown x"

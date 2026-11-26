@@ -51,4 +51,5 @@ git_identity_apply() {
 }
 
 register_module --id git --name 'Git author' --platforms 'Darwin Linux' \
+  --prerequisites 'Git executable and configured account identity.' \
   --check git_identity_check --apply git_identity_apply --verify git_identity_check

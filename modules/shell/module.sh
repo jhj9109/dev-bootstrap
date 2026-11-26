@@ -153,4 +153,5 @@ shell_apply() (
 )
 
 register_module --id shell --name Shell --platforms 'Darwin Linux' \
+  --prerequisites 'Publishing the loader needs zsh; managing fragment revisions uses Git.' \
   --check shell_check --apply shell_apply --verify shell_check

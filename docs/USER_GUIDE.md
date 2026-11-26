@@ -190,6 +190,15 @@ other-account/frontend
 
 마지막 명령은 메뉴를 엽니다. 메뉴 10번과 `all`은 활성 모듈을 배열 순서대로 실행합니다. 개별 설치·설정 명령과 메뉴 번호는 계속 직접 선택할 수 있습니다.
 
+실행 전 같은 옵션으로 계획을 확인할 수 있습니다.
+
+```bash
+./setup.sh plan --environment minimal --profile secondary
+./setup.sh all --dry-run --environment minimal --profile secondary
+```
+
+두 명령은 환경, 계정, 인증 방식, 대상 OS와 모듈별 실행 순서·선행 조건을 표시합니다. 설치나 인증 상태를 조회하지 않으며 유효한 계획은 코드 0으로 종료합니다. 선행 모듈을 빠뜨리거나 뒤에 놓으면 코드 2로 종료하므로 출력된 모듈명을 보고 배열을 수정하세요. Node와 uv Python 앞에는 `shell`, 일괄 저장소 복원 앞에는 `workspace`를 두세요. 소스 방식 Python은 단독으로 선택할 수 있습니다. `shell`을 생략하면 기존 셸 활성 목록이 유지됩니다.
+
 `config/defaults.conf`에서 공통 기본값을 지정합니다.
 
 ```bash
