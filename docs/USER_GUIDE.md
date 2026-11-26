@@ -158,7 +158,7 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 ./setup.sh repo remote OWNER/REPO --repo "$HOME/Documents/my-project" --name upstream
 ```
 
-지정한 Remote가 없으면 추가합니다. 이미 존재하며 URL이 다르면 덮어쓰지 않습니다. 의도적으로 변경하려면 Git 명령 `git remote set-url`을 별도로 사용하고 변경 전 주소를 확인하세요.
+일반 저장소 또는 연결된 Git worktree의 루트를 지정하세요. 연결된 worktree에서는 remote 설정이 같은 저장소의 다른 worktree와 공유됩니다. Git 디렉터리를 별도로 둔 경우 worktree를 가리키는 역참조나 명시적인 `core.worktree`가 있어야 합니다. 지정한 Remote가 없으면 추가합니다. 이미 존재하며 URL이 다르면 덮어쓰지 않습니다. 의도적으로 변경하려면 Git 명령 `git remote set-url`을 별도로 사용하고 변경 전 주소를 확인하세요.
 
 ### 여러 프로젝트 일괄 복원
 
@@ -174,7 +174,9 @@ my-account/backend
 other-account/frontend
 ```
 
-이 목록은 `./setup.sh all`을 실행할 때 복제합니다. 각 행은 `OWNER/REPO` 형식이어야 하며 모두 같은 기본 인증 프로필을 사용합니다. 계정별로 다른 프로필이 필요하면 `repo clone --profile ...` 명령을 개별적으로 실행하세요. 이름이 같은 두 저장소는 기본 Workspace 경로에서 충돌합니다.
+이 목록은 `./setup.sh all`을 실행할 때 복제합니다. 각 행은 `OWNER/REPO` 형식이어야 하며 모두 같은 기본 인증 프로필을 사용합니다. 계정별로 다른 프로필이 필요하면 `repo clone --profile ...` 명령을 개별적으로 실행하세요. `all`과 메뉴 10번은 다른 설정 작업을 시작하기 전에 목록 전체의 형식과 목적지 이름을 검사합니다. 같은 행을 반복하거나 저장소 이름이 대소문자만 달라도 거부합니다. 서로 다른 소유자의 동명 저장소는 개별 `repo clone --dest`로 경로를 지정하세요.
+
+목록 복원은 첫 복제 전에 모든 목적지를 확인합니다. 같은 origin의 저장소는 작업 파일과 설정을 보존하고 건너뜁니다. 새 저장소는 같은 파일시스템의 임시 디렉터리에서 복제와 origin 확인을 마친 뒤 배치합니다. 개별 복제가 실패해도 목록의 나머지 항목은 계속 시도합니다. 다시 실행하면 완료된 저장소를 건너뜁니다. 목적지나 상위 경로에 심볼릭 링크가 있으면 실제 경로를 지정하세요.
 
 ## 8. 전체 실행 설정
 

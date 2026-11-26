@@ -18,7 +18,7 @@
 | ☑ | T07 | Node 버전과 nvm default alias를 함께 검사 | 요청 버전만 설치된 경우 alias 복구, nvm 조회 오류 시 재설치 방지 |
 | ☑ | T08 | Python의 uv·소스 설치 경로 연결 | 요청 버전·설치 방식 구분, 소스 빌드의 불완전한 버전 거부, 실패 상태 전달 |
 | ☑ | T09 | GitHub의 SSH·gh 경로 및 별도 doctor 연결 | 기존 키 보존, 로컬 설정 완료와 원격 인증 필요 구분, 잘못된 계정 검출 |
-| ☐ | T10 | repository에 목록 복원과 clone/remote 전용 명령 배치 | 로컬 Git fixture로 같은 origin 건너뛰기, 다른 origin 거부, 명시 목적지 보존 |
+| ☑ | T10 | repository에 목록 복원과 clone/remote 전용 명령 배치 | 로컬 Git fixture로 같은 origin 건너뛰기, 다른 origin 거부, 명시 목적지 보존 |
 
 ## Phase 3~4 · 설정과 셸 이관
 

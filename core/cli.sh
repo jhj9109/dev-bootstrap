@@ -123,6 +123,9 @@ run_workspace() {
 }
 run_all() {
   local profile="$1" method="$2" no_passphrase="$3" failures=0
+  local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
+  local repository_profile=$profile repository_method=$method repository_snapshot
+  repository_snapshot=$(repository_read_list) || return 1
   log_info 'Starting full setup; failures will be summarized'
   workspace_configure || { log_warn 'Workspace step failed'; failures=$((failures+1)); }
   configure_git "$profile" global '' || { log_warn 'Git step failed'; failures=$((failures+1)); }
@@ -131,16 +134,7 @@ run_all() {
   if [[ "$INSTALL_NODE" == true ]]; then run_install node || { log_warn 'Node step failed'; failures=$((failures+1)); }; fi
   if [[ "$INSTALL_PYTHON" == true ]]; then run_install python || { log_warn 'Python step failed'; failures=$((failures+1)); }; fi
   if [[ "$INSTALL_ITERM" == true ]]; then run_install iterm || { log_warn 'iTerm step failed'; failures=$((failures+1)); }; fi
-  if [[ -f "$ROOT_DIR/config/repositories.conf" ]]; then
-    local line
-    while IFS= read -r line || [[ -n "$line" ]]; do
-      line="${line%%#*}"
-      line="${line#"${line%%[![:space:]]*}"}"
-      line="${line%"${line##*[![:space:]]}"}"
-      [[ -z "$line" ]] && continue
-      repo_clone "$line" "$profile" "$method" || { log_warn "Repository step failed: $line"; failures=$((failures+1)); }
-    done < "$ROOT_DIR/config/repositories.conf"
-  fi
+  runner_run repository || { log_warn 'Repository step failed'; failures=$((failures+1)); }
   log_info "Setup finished with $failures failed/attention step(s)"
   (( failures == 0 ))
 }

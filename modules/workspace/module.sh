@@ -1,16 +1,6 @@
 #!/usr/bin/env bash
 workspace_status() {
-  local path="$WORKSPACE_DIR"
-  [[ $path == /* && $path == "$HOME"/* ]] || return 2
-  case "$path/" in *//*|*/./*|*/../*) return 2 ;; esac
-  while [[ $path != "$HOME" ]]; do
-    [[ ! -L $path ]] || return 2
-    if [[ -e $path ]]; then
-      [[ -d $path ]] || return 2
-      [[ -x $path ]] || return 1
-    fi
-    path=${path%/*}
-  done
+  workspace_validate_path || return $?
   workspace_check && return 0
   return 10
 }

@@ -30,6 +30,22 @@ T08의 `test_python_runner.sh`는 임시 HOME의 모의 uv·인터프리터·빌
 
 T09의 `test_github_runner.sh`는 격리된 HOME과 모의 ssh·ssh-keygen·gh를 사용한다. SSH 쌍의 지문, 두 프로필의 설정, 공개키 복구 실패와 재시도, 설정 검증 실패 후 원본 복원, SKIPPED 안내, doctor의 계정 판정과 출력 제한을 검사한다. gh 미로그인·계정 불일치·조회 오류, 모의 대화형 로그인, 사용자 helper 보존 및 CLI 코드 1·2·3·4·5도 확인한다. 테스트에서 GitHub에 인증하거나 접속하지 않는다.
 
+## Phase 2 완료 판정
+
+T10의 `test_repository_runner.sh`는 실제 로컬 Git 저장소 두 개를 file 전송으로 복제한다. 등록된 check와 verify만 실행해 Workspace 생성이 0회임을 확인한다. CLI와 메뉴 10번으로 목록 복원·재실행, 기존 파일·origin·설정 보존, 연결된 worktree, 명시 목적지와 심볼릭 링크 거부를 검사한다. Git 호출에 실패를 주입해 원격 미설정과 조회 오류를 구분하고, 실패한 복제본의 정리·재시도 및 배치 전후 검증을 확인한다.
+
+| 작업 | Linux에서 확인한 범위 | Intel iMac에서 확인할 항목 |
+|---|---|---|
+| T04 iTerm2 | 모의 Darwin·curl·ditto로 최초 적용, 재실행, 중단과 검증 실패 | 배포 파일 다운로드, 실제 앱 번들의 복사와 실행 |
+| T05 Git | 실제 Git의 global/local 설정과 연결된 worktree에서 재실행·범위 보존, 쓰기 및 조회 실패 주입 | 기본 탑재 Git에서 같은 범위와 종료 코드 |
+| T06 Shell | 임시 HOME의 실제 파일로 로더·권한·사용자 편집 보존, 파일 연산·검증 실패 주입 | 새 zsh 세션에서 로더 실행과 PATH |
+| T07 Node | 모의 nvm의 부분·정확 버전, alias 복구, 조회·설치·검증 실패 | nvm 설치 및 실제 Node 버전과 default alias |
+| T08 Python | 모의 uv·빌드 도구로 버전 변경, 미설치·조회 실패 구분, 빌드 재시도와 검증 실패 | uv 관리 인터프리터 실행, Xcode CLI로 소스 빌드 |
+| T09 GitHub | 모의 ssh·ssh-keygen·gh로 키 보존·계정 판정·인증 실패, 실제 임시 Git helper 설정 검사 | 승인된 계정의 키 등록, SSH·gh 인증과 macOS credential helper |
+| T10 Repository | 실제 Git clone/remote와 파일 기반 URL 재작성, 선택 프로필 전달, 목록 충돌·오류 처리 | 교육장 초기화 후 실제 목록 복원과 origin 확인 |
+
+Phase 2의 자동 완료 기준은 기존 명령·메뉴 회귀, 동일 목표 재적용, Node·Python의 다른 버전 요청, 진단 및 사후 검증 실패, clone/remote 옵션과 거부 동작으로 확인했다. 기본 Bash 3.2, 실제 설치와 외부 인증은 T21 실기 점검에 남아 있다.
+
 ## 재현
 
 Git 작업 트리의 루트에서 아래 명령을 실행한다. 다른 디렉터리에서는 스크립트의 경로를 지정한다.
