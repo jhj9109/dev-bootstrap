@@ -46,6 +46,10 @@ T10의 `test_repository_runner.sh`는 실제 로컬 Git 저장소 두 개를 fil
 
 Phase 2의 자동 완료 기준은 기존 명령·메뉴 회귀, 동일 목표 재적용, Node·Python의 다른 버전 요청, 진단 및 사후 검증 실패, clone/remote 옵션과 거부 동작으로 확인했다. 기본 Bash 3.2, 실제 설치와 외부 인증은 T21 실기 점검에 남아 있다.
 
+## Phase 3 설정
+
+T11의 `test_config_registry.sh`는 임시 복제본에 모듈을 추가해 기본값 → defaults.conf → profiles.conf 우선순위, 빈 값·공백·개행·셸 특수문자의 왕복, 삭제한 값의 초기화를 확인한다. 공통·모듈 후보값 오류, 설정 파일 로드 실패, 기본값 누락과 훅 실패를 주입하고 마지막 정상 설정의 모든 키를 비교한다. 잘린 레코드·잘못된 키·중복 키·여분 바이트와 스칼라 제약을 검사하고 CLI와 메뉴에서 같은 검증이 적용되는지 확인한다. `test_registry.sh`는 공통 키, 셸·Runner·Registry 예약 변수, 접두사가 겹치는 두 모듈의 키 충돌을 두 진입점에서 검사한다.
+
 ## 재현
 
 Git 작업 트리의 루트에서 아래 명령을 실행한다. 다른 디렉터리에서는 스크립트의 경로를 지정한다.
@@ -70,4 +74,4 @@ T01부터 `test_cli.sh`와 `test_menu_reload.sh`는 `setup.sh`와 `bootstrap.sh`
 4. 실제 Node·Python 버전, 새 zsh 세션의 경로, iTerm2 실행, 저장소 origin을 확인한다. 동일 설정으로 다시 실행해 기존 파일과 키가 보존되는지 점검한다.
 5. 설치 중단과 복구, 초기화 후 개인 설정·저장소 목록 복원을 점검한다. 결과에는 OS, 선택 프로필, 성공·실패 단계만 남기고 인증 자료는 제외한다.
 
-이번 Linux 실행에서 실기기 설치·Bash 3.2·외부 인증은 미검증이다. 기존 시험의 추가 배경은 [테스트 리뷰 가이드](reviews/TEST_REVIEW_GUIDE.md)에 있다.
+T11에서는 Linux에서 Bash 5.2.37과 Apple 공개 소스를 Linux용으로 빌드한 Bash 3.2.57로 전체 검증을 실행했다. Intel iMac 기본 Bash와 실제 설치·외부 인증은 수동 확인 대상으로 남아 있다. 기존 시험의 추가 배경은 [테스트 리뷰 가이드](reviews/TEST_REVIEW_GUIDE.md)에 있다.

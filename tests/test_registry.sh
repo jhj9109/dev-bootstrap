@@ -75,6 +75,21 @@ write_module "$valid --keys SAMPLE_VERSION"
 reject 'Incomplete configuration hooks'
 write_module "$valid --keys 'SAMPLE_X SAMPLE_X' --defaults sample_ok --validate sample_ok"
 reject 'Duplicate keys'
+# Prefixes alone cannot distinguish a common key, a shell/runtime name, or
+# overlapping module IDs (sample and sample_child).
+write_module "$valid --keys SAMPLE_CHILD_VALUE --defaults sample_ok --validate sample_ok"
+for pair in 'install INSTALL_NODE' 'target TARGET_OS' 'bash BASH_SOURCE' 'registry REGISTRY_KEYS' \
+    'runner RUNNER_STATUS' 'sample_child SAMPLE_CHILD_VALUE'; do
+  read -r id key <<< "$pair"
+  mkdir "$project/modules/$id"
+  cat > "$project/modules/$id/module.sh" <<MODULE
+${id}_ok() { return 0; }
+register_module --id $id --name Fixture --platforms Linux --keys $key \\
+  --defaults ${id}_ok --validate ${id}_ok --check ${id}_ok --apply ${id}_ok --verify ${id}_ok
+MODULE
+  reject "Invalid or reserved key $key"
+  rm -r "$project/modules/$id"
+done
 mv "$entry" "$tmp/outside.sh"
 ln -s "$tmp/outside.sh" "$entry"
 reject 'Unsafe module entry'

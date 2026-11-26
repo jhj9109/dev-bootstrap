@@ -13,6 +13,10 @@ CONF
 # Verify invalid edits never partially change the active in-memory config.
 source "$TMP/project/lib/logger.sh"
 source "$TMP/project/lib/config.sh"
+source "$TMP/project/core/registry.sh"
+source "$TMP/project/modules/workspace.sh"
+source "$TMP/project/modules/iterm.sh"
+discover_modules "$TMP/project"
 load_config "$TMP/project"
 [[ "$GITHUB_PERSONAL_USER" == alice && "$NODE_VERSION" == 24 ]]
 cat > "$TMP/project/config/profiles.conf" <<'CONF'

@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+python_defaults() {
+  PYTHON_VERSION=3.12
+  PYTHON_INSTALL_METHOD=uv
+}
+
+python_validate() {
+  case "$PYTHON_INSTALL_METHOD" in uv|source) ;; *) log_error 'Invalid Python method'; return 2 ;; esac
+  [[ $PYTHON_VERSION =~ ^[0-9]+[.][0-9]+([.][0-9]+)?$ ]] || { log_error 'Invalid Python version'; return 2; }
+}
+
 python_inspect() {
   local prefix="$HOME/.local/python-$version" cmd
   python_validate_request "$method" "$version" || return $?
@@ -54,4 +64,5 @@ python_apply() {
 }
 
 register_module --id python --name Python --platforms 'Darwin Linux' \
+  --keys 'PYTHON_VERSION PYTHON_INSTALL_METHOD' --defaults python_defaults --validate python_validate \
   --check python_check --apply python_apply --verify python_check

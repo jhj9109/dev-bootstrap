@@ -1,5 +1,21 @@
 #!/usr/bin/env bash
 # Module IDs index all metadata arrays. Only trusted repository code is sourced.
+REGISTRY_COMMON_KEYS=(
+  TARGET_OS DEFAULT_AUTH_METHOD DEFAULT_GITHUB_PROFILE INSTALL_ITERM INSTALL_NODE INSTALL_PYTHON
+  GITHUB_PERSONAL_USER GITHUB_PERSONAL_EMAIL GITHUB_SECONDARY_USER GITHUB_SECONDARY_EMAIL
+)
+
+registry_reserved_key() {
+  case "$1" in
+    BASH_*|COMP_*|LC_*|READLINE_*|PROMPT_COMMAND|PROMPT_DIRTRIM|CHILD_MAX|POSIXLY_CORRECT) return 0 ;;
+    ROOT_DIR|ENABLED_MODULES|REGISTRY_*|RUNNER_*|PROFILE_*|REPO_OWNER|REPO_NAME|NO_PASSPHRASE|INSTALL_METHOD|INSTALL_VERSION) return 0 ;;
+    GIT_CONFIG|GIT_CONFIG_*|GIT_DIR|GIT_WORK_TREE|GIT_COMMON_DIR|GIT_INDEX_FILE|GIT_OBJECT_DIRECTORY) return 0 ;;
+    GIT_ALTERNATE_OBJECT_DIRECTORIES|GIT_SHALLOW_FILE|GIT_GRAFT_FILE|GIT_IMPLICIT_WORK_TREE|GIT_NAMESPACE|GIT_QUARANTINE_PATH) return 0 ;;
+    SSH_AUTH_SOCK|NVM_DIR|GH_NO_UPDATE_NOTIFIER|GH_PROMPT_DISABLED|UV_INSTALL_DIR|UV_NO_MODIFY_PATH) return 0 ;;
+  esac
+  return 1
+}
+
 registry_index() {
   local index
   for ((index=0; index<${#REGISTRY_IDS[@]}; index++)); do
@@ -65,7 +81,7 @@ register_module() {
         platforms) [[ $word == Darwin || $word == Linux ]] || { registry_error "Unknown platform $word"; return 2; } ;;
         depends) [[ $word =~ ^[a-z][a-z0-9_]*$ ]] || { registry_error "Invalid dependency $word"; return 2; } ;;
         keys)
-          if [[ ! $word =~ ^${prefix}[A-Z0-9_]+$ || $word == BASH_* || $registry_claimed_keys == *" $word "* ]]; then
+          if [[ ! $word =~ ^${prefix}[A-Z0-9_]+$ || $registry_claimed_keys == *" $word "* ]] || registry_reserved_key "$word"; then
             registry_error "Invalid or reserved key $word"; return 2
           fi
           registry_claimed_keys="$registry_claimed_keys$word "
@@ -86,10 +102,10 @@ register_module() {
 }
 
 discover_modules() {
-  local LC_ALL=C
+  local LC_ALL=C IFS=' '
   local root directory registry_directory registry_entry count dependency
   local registry_invalid=0
-  local registry_claimed_keys=' ENABLED_MODULES TARGET_OS DEFAULT_AUTH_METHOD DEFAULT_GITHUB_PROFILE ROOT_DIR GITHUB_PERSONAL_USER GITHUB_PERSONAL_EMAIL GITHUB_SECONDARY_USER GITHUB_SECONDARY_EMAIL GIT_CONFIG_GLOBAL SSH_AUTH_SOCK '
+  local registry_claimed_keys=" ${REGISTRY_COMMON_KEYS[*]} "
   root=$(cd -P -- "$1" && pwd -P) || return 2
   REGISTRY_IDS=() REGISTRY_NAMES=() REGISTRY_PLATFORMS=() REGISTRY_DEPENDS=()
   REGISTRY_CHECK=() REGISTRY_APPLY=() REGISTRY_VERIFY=()

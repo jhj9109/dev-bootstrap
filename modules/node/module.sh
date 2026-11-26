@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+node_defaults() { NODE_VERSION=24; }
+
+node_validate() {
+  [[ $NODE_VERSION =~ ^[0-9]+([.][0-9]+){0,2}$ ]] || { log_error 'Invalid Node version'; return 2; }
+}
+
 # Inspect again in apply: each Runner hook has its own shell and nvm function.
 node_inspect() {
   shell_state=0
@@ -45,4 +51,5 @@ node_apply() {
 }
 
 register_module --id node --name Node.js --platforms 'Darwin Linux' \
+  --keys 'NODE_VERSION' --defaults node_defaults --validate node_validate \
   --check node_check --apply node_apply --verify node_check
