@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -eu
+if [[ $1 == -G ]]; then
+  user=${MOCK_SSH_USER:-git}
+  if [[ $2 == -F ]]; then cat >/dev/null; else user=${MOCK_LIVE_USER:-$user}; fi
+  alias=${!#}
+  printf 'host %s\nhostname %s\nuser %s\nidentitiesonly yes\nidentityfile %s/.ssh/dev-bootstrap-%s\n' \
+    "$alias" "${MOCK_SSH_HOST:-github.com}" "$user" "$HOME" "${alias#github-}"
+  if [[ ${MOCK_EXTRA_IDENTITY:-0} == 1 ]]; then echo "identityfile ~/.ssh/other"; fi
+  exit 0
+fi
+echo auth >> "$HOME/ssh-trace"
+[[ "${*}" == *StrictHostKeyChecking=yes* && "${*}" == *UpdateHostKeys=no* &&
+   "${*}" == *BatchMode=yes* && "${*}" == *AddKeysToAgent=no* && "${!#}" == git@github.com ]]
+printf '%s\n' "${MOCK_SSH_OUTPUT:-unregistered}"
+exit "${MOCK_SSH_STATUS:-1}"

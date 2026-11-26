@@ -48,20 +48,7 @@ INSTALL_PYTHON=false
 INSTALL_ITERM=false
 CONF
 mkdir -p "$TMP/mockbin"
-cat > "$TMP/mockbin/ssh-keygen" <<'MOCK'
-#!/usr/bin/env bash
-if [[ "$1" == -l ]]; then [[ -f "$3" ]]; exit $?; fi
-if [[ "$1" == -y ]]; then printf 'ssh-ed25519 MOCKPUB\n'; exit 0; fi
-while (( $# )); do if [[ "$1" == -f ]]; then shift; key="$1"; fi; shift; done
-printf 'MOCKPRIVATE\n' > "$key"
-printf 'ssh-ed25519 MOCKPUB\n' > "$key.pub"
-MOCK
-cat > "$TMP/mockbin/ssh" <<'MOCK'
-#!/usr/bin/env bash
-if [[ "$1" == -G ]]; then printf 'hostname github.com\n'; exit 0; fi
-exit 1
-MOCK
-chmod +x "$TMP/mockbin/ssh" "$TMP/mockbin/ssh-keygen"
+cp "$ROOT"/tests/fixtures/github/{ssh,ssh-keygen} "$TMP/mockbin/"
 export PATH="$TMP/mockbin:$PATH"
 "$TMP/project/setup.sh" all --profile personal --no-passphrase >/dev/null
 # Keep the enabled runtime and application modules offline on the second run.
@@ -86,6 +73,7 @@ chmod +x "$TMP/mockbin/uname"
 grep -Fq 'shell: SKIPPED' "$TMP/all-output"
 grep -Fq 'python: SKIPPED' "$TMP/all-output"
 grep -Fq 'node: SKIPPED' "$TMP/all-output"
+grep -Fq 'github: SKIPPED' "$TMP/all-output"
 grep -Fq 'git: SKIPPED' "$TMP/all-output"
 grep -Fq "iterm: SKIPPED" "$TMP/all-output"
 [[ -f "$HOME/.ssh/dev-bootstrap-personal" ]]

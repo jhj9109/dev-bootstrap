@@ -37,14 +37,9 @@ GITHUB_PERSONAL_USER=alice
 GITHUB_PERSONAL_EMAIL=alice@example.com
 CONF
 mkdir -p "$HOME/.ssh"
-printf 'private\n' > "$HOME/.ssh/dev-bootstrap-personal"
-printf 'public\n' > "$HOME/.ssh/dev-bootstrap-personal.pub"
-cat > "$TMP/mockbin/ssh" <<'MOCK'
-#!/usr/bin/env bash
-printf '%s\n' "${MOCK_SSH_OUTPUT:-}"
-exit "${MOCK_SSH_STATUS:-1}"
-MOCK
-chmod +x "$TMP/mockbin/ssh"
+printf '%s\nfixture-id: personal\n' '-----BEGIN OPENSSH PRIVATE KEY-----' > "$HOME/.ssh/dev-bootstrap-personal"
+printf 'ssh-ed25519 personal\n' > "$HOME/.ssh/dev-bootstrap-personal.pub"
+cp "$ROOT"/tests/fixtures/github/{ssh,ssh-keygen} "$TMP/mockbin/"
 export PATH="$TMP/mockbin:$PATH"
 export MOCK_SSH_OUTPUT="Hi alice! You've successfully authenticated, but GitHub does not provide shell access."
 export MOCK_SSH_STATUS=1

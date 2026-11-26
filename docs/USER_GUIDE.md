@@ -65,7 +65,7 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 ./setup.sh configure git --profile personal
 ./setup.sh configure github --profile personal
 
-# 3. 출력된 공개키를 GitHub 웹사이트에 등록
+# 3. 안내된 .pub 파일의 내용을 GitHub 웹사이트에 등록
 # GitHub → Settings → SSH and GPG keys → New SSH key
 
 # 4. 인증 확인
@@ -96,6 +96,12 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 
 프로필별로 `github-personal`, `github-secondary` SSH Host를 만듭니다. 키는 각각 `~/.ssh/dev-bootstrap-personal`, `~/.ssh/dev-bootstrap-secondary`에 저장됩니다. 기존 `~/.ssh/config`의 다른 내용은 보존하고 관리용 Include를 추가합니다.
 
+`configure github`와 메뉴 3번은 로컬 키 쌍의 지문, 관리 파일, 실제 SSH 별칭의 HostName·User·IdentityFile·IdentitiesOnly를 검사합니다. 로컬 설정이 정상이면 `SKIPPED`로 종료하고 공개키 등록 경로와 인증 확인 명령을 표시합니다. 개인키만 남아 있으면 공개키를 임시 파일로 복구해 지문을 확인합니다. 암호가 필요한 복구는 대화형 터미널에서 실행하세요.
+
+다른 Include가 관리 파일을 중복해서 읽을 수 있거나, 같은 별칭이 이미 정의돼 있거나, Match exec·관리 파일 편집을 발견하면 자동 적용을 중단합니다. 기존 설정을 검토한 뒤 재실행하세요. 강제 종료 후 `~/.ssh/.dev-bootstrap.lock`이 남았다면 실행 중인 설정 작업과 보관된 원본을 먼저 확인하세요.
+
+`doctor github --method ssh`와 메뉴 4번은 별도 인증 검사입니다. 별칭과 로컬 키를 확인한 뒤 해당 키로 github.com에 접속해 GitHub가 반환한 계정을 비교합니다. 신뢰가 확인된 GitHub 호스트 키가 필요합니다. doctor는 호스트 키를 추가하거나 갱신하지 않습니다.
+
 원격 URL 예시: `git@github-personal:OWNER/REPO.git`.
 
 기본적으로 키 암호(passphrase)를 대화형으로 입력합니다. `--no-passphrase`는 의도적으로 암호화하지 않은 키를 만들기 때문에 권장하지 않습니다. 주기적으로 GitHub 계정에서 오래된 공개키를 정리하세요.
@@ -109,6 +115,8 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 ```
 
 `gh`가 이미 설치되어 있어야 합니다. 이 프로젝트는 `gh` 자체를 설치하지 않습니다. 로그인은 브라우저 등의 사용자 개입이 필요할 수 있습니다. 두 GitHub 계정의 HTTPS 인증을 자동으로 저장소별 매핑하지 않으므로 `gh auth switch -h github.com -u 사용자명`으로 활성 계정을 확인하세요.
+
+활성 계정이 프로필과 일치하면 github.com의 Git credential helper를 확인합니다. 계정이 다르거나 기존 호스트별 helper와 충돌하면 `NEEDS_ACTION`으로 종료합니다. 미로그인이 확인된 경우에만 대화형 로그인을 시작합니다. `doctor github --method gh`는 활성 계정을 조회하고 로그인과 helper 설정은 수행하지 않습니다.
 
 ## 6. 개발 도구 설치
 

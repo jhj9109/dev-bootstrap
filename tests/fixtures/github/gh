@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -eu
+case "$1 $2" in
+  'auth status')
+    [[ "${*:3}" == '--hostname github.com' ]]
+    case ${GH_FAULT:-} in status) echo fixture-sensitive-diagnostic >&2; exit 7 ;; esac
+    [[ -f $HOME/active ]] || { echo 'You are not logged into any GitHub hosts.' >&2; exit 1; } ;;
+  'api --hostname')
+    [[ "${*:2}" == '--hostname github.com user --jq .login' ]]
+    [[ ${GH_FAULT:-} != api ]] || { echo fixture-sensitive-diagnostic >&2; exit 1; }
+    cat "$HOME/active" ;;
+  'auth login')
+    [[ -t 0 && "${*:3}" == '--hostname github.com --git-protocol https' ]]
+    echo login >> "$HOME/gh-writes"
+    echo alice > "$HOME/active" ;;
+  'auth setup-git')
+    [[ "${*:3}" == '--hostname github.com' ]]
+    echo setup >> "$HOME/gh-writes"
+    case ${GH_FAULT:-} in apply) exit 17 ;; no-write) exit 0 ;; esac
+    for host in github.com gist.github.com; do
+      key="credential.https://$host.helper"
+      git config --global --replace-all "$key" ''
+      git config --global --add "$key" "!$(command -v gh) auth git-credential"
+    done ;;
+  *) echo unexpected >> "$HOME/gh-writes"; exit 99 ;;
+esac
