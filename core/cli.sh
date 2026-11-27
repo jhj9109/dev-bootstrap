@@ -17,6 +17,8 @@ Usage:
   ./setup.sh repo clone OWNER/REPO [--profile personal|secondary] [--method ssh|gh] [--dest ABS_PATH]
   ./setup.sh repo remote OWNER/REPO --repo PATH [--name origin] [--profile personal|secondary] [--method ssh|gh]
   ./setup.sh plan [--profile personal|secondary] [--method ssh|gh] [--no-passphrase]
+  ./setup.sh check [MODULE] [options]
+  ./setup.sh apply [MODULE] [options]
   ./setup.sh all [--dry-run] [--profile personal|secondary] [--method ssh|gh] [--no-passphrase]
   ./setup.sh help
 
@@ -28,18 +30,28 @@ Node uses nvm, Python uses uv by default; source builds require a full X.Y.Z ver
 USAGE
 }
 parse_options() {
-  local command_name=$1 explicit_global=false
-  shift
+  local command_name=$1 option_target=$2 explicit_global=false aggregate=false
+  shift 2
+  case $command_name in plan|all|apply|check) aggregate=true ;; esac
   PROFILE="$DEFAULT_GITHUB_PROFILE" METHOD="$DEFAULT_AUTH_METHOD" SCOPE=global REPO='' NO_PASSPHRASE=false
   while (( $# )); do
     case "$1" in
-      --profile|--method|--repo)
+      --profile|--method|--repo|--version)
         local opt="$1"; shift
         [[ $# -gt 0 && -n "$1" && "$1" != --* ]] || { log_error "Missing value for $opt"; return 2; }
         case "$opt" in
           --profile) PROFILE="$1" ;;
-          --method) METHOD="$1" ;;
+          --method)
+            if [[ $aggregate == true && $option_target == python && ( $1 == uv || $1 == source ) ]]; then
+              PYTHON_INSTALL_METHOD=$1
+            else
+              METHOD=$1
+            fi ;;
+          --version)
+            [[ $aggregate == true && $1 =~ ^[0-9]+([.][0-9]+){0,2}$ ]] || return 2
+            case $option_target in node) NODE_VERSION=$1 ;; python) PYTHON_VERSION=$1 ;; *) return 2 ;; esac ;;
           --repo)
+            [[ $aggregate == false || $option_target == git ]] || return 2
             [[ $explicit_global == false ]] || { log_error 'Conflicting Git scopes'; return 2; }
             REPO="$1"; SCOPE=local ;;
         esac ;;
@@ -47,6 +59,7 @@ parse_options() {
         [[ $command_name == all && $dry_run == false ]] || { log_error 'Unexpected --dry-run'; return 2; }
         dry_run=true ;;
       --global)
+        [[ $aggregate == false || $option_target == git ]] || return 2
         [[ -z $REPO ]] || { log_error 'Conflicting Git scopes'; return 2; }
         explicit_global=true; SCOPE=global ;;
       --no-passphrase) NO_PASSPHRASE=true ;;
@@ -127,37 +140,50 @@ run_workspace() {
     *) return 1 ;;
   esac
 }
-run_all() {
-  local shell_full_apply=1
-  local profile="$1" method="$2" no_passphrase="$3" failures=0
-  local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
-  local repository_profile=$profile repository_method=$method repository_snapshot
-  local id
-  planner_validate || return $?
-  # Keep the old manifest preflight before any writes, only for a selected restore.
-  for id in ${ENABLED_MODULES[@]+"${ENABLED_MODULES[@]}"}; do
-    if [[ $id == repository ]]; then
-      repository_snapshot=$(repository_read_list) || return 1
-      break
-    fi
+# Bind the CLI/config snapshot once. Legacy adapters still own their individual
+# requests and exit-code translations. Runner dispatch never switches on an ID.
+run_request() {
+  local action=$1 requested=$2 index dry_run=false
+  shift 2
+  local PROFILE METHOD REPO SCOPE NO_PASSPHRASE
+  local NODE_VERSION=$NODE_VERSION PYTHON_VERSION=$PYTHON_VERSION PYTHON_INSTALL_METHOD=$PYTHON_INSTALL_METHOD
+  local -a plan_order=() plan_deps=() common_options retry_options
+  parse_options "$action" "$requested" "$@" || return 2
+  if [[ $METHOD != ssh && $NO_PASSPHRASE == true ]]; then
+    log_error '--no-passphrase requires SSH'; return 2
+  fi
+  planner_build "$requested" || return 2
+  local has_repository=false
+  for index in ${plan_order[@]+"${plan_order[@]}"}; do
+    case ${REGISTRY_IDS[index]} in
+      python) python_validate_request "$PYTHON_INSTALL_METHOD" "$PYTHON_VERSION" || return 2 ;;
+      repository) has_repository=true ;;
+    esac
   done
-  log_info 'Starting full setup; failures will be summarized'
-  for id in ${ENABLED_MODULES[@]+"${ENABLED_MODULES[@]}"}; do
-    case "$id" in
-      workspace) workspace_configure ;;
-      git) configure_git "$profile" global '' ;;
-      github) configure_github "$profile" "$method" "$no_passphrase" ;;
-      shell) shell_configure ;;
-      node|python|iterm) run_install "$id" ;;
-      *) runner_run "$id" ;;
-    esac || { log_warn "$id step failed"; failures=$((failures+1)); }
-  done
-  log_info "Setup finished with $failures failed/attention step(s)"
-  (( failures == 0 ))
+  if [[ $action == plan || $dry_run == true ]]; then
+    planner_print "$PROFILE" "$METHOD" "$NO_PASSPHRASE"
+    return $?
+  fi
+
+  local RUNNER_PLANNED=1 shell_full_apply=1 shell_target=''
+  local identity_profile=$PROFILE identity_scope=$SCOPE identity_repo=$REPO
+  local github_profile=$PROFILE github_method=$METHOD github_unencrypted=$NO_PASSPHRASE
+  local node_request=$NODE_VERSION python_request=$PYTHON_VERSION python_method=$PYTHON_INSTALL_METHOD
+  local repository_profile=$PROFILE repository_method=$METHOD repository_snapshot
+  case $requested in
+    node|python) shell_full_apply=0; shell_target=$requested ;;
+  esac
+  if [[ $has_repository == true ]]; then
+    repository_snapshot=$(repository_read_list) || return $?
+  fi
+  common_options=(--environment "$ENVIRONMENT" --profile "$PROFILE" --method "$METHOD")
+  if [[ $NO_PASSPHRASE == true ]]; then common_options+=(--no-passphrase); fi
+  retry_options=(--environment "$ENVIRONMENT" "$@")
+  runner_execute_plan "$action" "$requested"
 }
 main() {
-  local shell_full_apply=0 shell_target='' migration_rc=''
-  local requested_environment='' dry_run=false
+  local RUNNER_PLANNED=0 shell_full_apply=0 shell_target='' migration_rc=''
+  local requested_environment=''
   local -a command=()
   while (( $# )); do
     case "$1" in
@@ -185,7 +211,7 @@ main() {
     help|-h|--help) usage ;;
     doctor)
       if [[ $# -eq 1 ]]; then doctor
-      elif [[ "$target" == github ]]; then shift 2; parse_options "$action" "$@" || return $?; github_doctor "$PROFILE" "$METHOD"
+      elif [[ "$target" == github ]]; then shift 2; parse_options "$action" "$target" "$@" || return $?; github_doctor "$PROFILE" "$METHOD"
       else usage; return 2; fi ;;
     repo)
       [[ $# -ge 3 ]] || { usage; return 2; }
@@ -211,14 +237,15 @@ main() {
         remote) [[ -n "$REPO" && -z "$dest" ]] || { log_error 'remote requires --repo PATH'; return 2; }; repo_remote "$REPO" "$spec" "$PROFILE" "$METHOD" "$name" ;;
         *) log_error 'Unknown repo operation'; return 2;;
       esac ;;
-    plan|all)
-      shift; parse_options "$action" "$@" || return $?
-      [[ "$SCOPE" == global && -z "$REPO" ]] || return 2
-      if [[ $action == plan || $dry_run == true ]]; then
-        planner_print "$PROFILE" "$METHOD" "$NO_PASSPHRASE"
-        return $?
+    plan|all|check|apply)
+      shift
+      target=''
+      if [[ ( $action == check || $action == apply ) && $# -gt 0 && $1 != --* ]]; then
+        target=$1
+        [[ -n $target ]] || return 2
+        shift
       fi
-      run_all "$PROFILE" "$METHOD" "$NO_PASSPHRASE" ;;
+      run_request "$action" "$target" "$@" ;;
     install)
       [[ $# -ge 2 ]] || { usage; return 2; }
       shift 2; run_install "$target" "$@" ;;
@@ -232,7 +259,7 @@ main() {
         [[ $# -eq 2 ]] || { log_error 'Shell accepts no options'; return 2; }
         shell_configure; return $?
       fi
-      shift 2; parse_options "$action" "$@" || return $?
+      shift 2; parse_options "$action" "$target" "$@" || return $?
       case "$target" in
         git) [[ "$NO_PASSPHRASE" == false && "$METHOD" == "$DEFAULT_AUTH_METHOD" ]] || { log_error 'Unsupported Git option'; return 2; }; configure_git "$PROFILE" "$SCOPE" "$REPO" ;;
         github) [[ "$SCOPE" == global && -z "$REPO" ]] || { log_error '--repo is not supported for GitHub auth'; return 2; }; configure_github "$PROFILE" "$METHOD" "$NO_PASSPHRASE" ;;

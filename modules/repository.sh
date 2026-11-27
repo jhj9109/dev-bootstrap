@@ -126,7 +126,13 @@ repo_clone() (
   repo_clone_status "$path" "$url" "$default" || rc=$?
   if [[ $rc == 0 ]]; then log_ok "Repository already cloned: $path"; return 0; fi
   [[ $rc == 10 ]] || return "$rc"
-  if [[ $default == true ]]; then workspace_configure || return $?; fi
+  if [[ $default == true ]]; then
+    if [[ ${RUNNER_PLANNED:-0} == 1 ]]; then
+      workspace_check || { log_error 'Workspace prerequisite needs changes'; return 3; }
+    else
+      workspace_configure || return $?
+    fi
+  fi
   parent=${path%/*}
   parent=${parent:-/}
   name=${path##*/}

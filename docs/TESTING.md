@@ -94,6 +94,12 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 
 `tests/test_planner.sh`는 임시 저장소에 복수 선행 모듈이 있는 그래프를 등록하고 두 CLI 진입점의 계획 출력과 종료 코드를 대조한다. 정상 사용자 순서, 누락·역순·중복·미등록 ID·자기 참조·순환, 실제 Node·Python 설치 방식별 Shell 관계와 Repository의 Workspace 관계를 검사한다. 매 요청 전후에 기존 로더·활성 목록·사용자 파일·링크·권한을 포함한 HOME 아카이브를 비교하고, 실행 훅과 설치·인증 도구 호출 기록이 비어 있는지 확인한다. 빈 배열에 대해서는 실제 `all`도 같은 HOME을 보존해야 한다.
 
+## T17 실행 결과와 선행 상태
+
+`tests/test_plan_runner.sh`는 다이아몬드 의존 그래프에 check·apply·verify 실패를 주입한다. 호출 기록으로 전이 차단, 독립 모듈의 완료, 단일 대상의 선행 검사 횟수, 두 번째 실행의 SKIPPED를 확인한다. 읽기 전용 검사와 차단된 단일 적용 전후에는 임시 HOME 아카이브를 대조한다. 빈 계획, 순환·옵션 오류 코드 2, Python 방식·버전 재정의, Shell 상태 변경 후 중첩 적용 방지, Git 로컬 범위도 포함한다.
+
+`tests/test_repository_runner.sh`는 Workspace 생성 시 목록 파일을 교체해 Repository의 검사·적용·검증이 처음 확정한 두 저장소를 끝까지 사용하는지 확인한다. 생성 호출이 한 번인지, 기존 개별 복제 명령이 계속 기본 목적지를 준비할 수 있는지도 검사한다.
+
 ## Intel iMac 수동 검사
 
 교육장 장비에서 사용자가 승인한 테스트 계정과 별도 HOME을 사용한다. 설치와 실제 인증은 운영자와 일정을 정한 뒤 실행한다.

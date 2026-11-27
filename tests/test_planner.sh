@@ -74,11 +74,14 @@ check_pair() {
 reject() {
   check_pair 2
   grep -Fq -- "$1" "$tmp/plan"
-  # Existing all must reject before manifest preflight or its first adapter.
-  local rc=0
-  run setup.sh all > "$tmp/all" 2>&1 || rc=$?
-  [[ $rc == 2 ]]
-  unchanged
+  # Every full-plan execution entry rejects before manifest preflight or hooks.
+  local action rc
+  for action in all check apply; do
+    rc=0
+    run setup.sh "$action" > "$tmp/all" 2>&1 || rc=$?
+    [[ $rc == 2 ]]
+    unchanged
+  done
 }
 select_modules second first both
 check_pair 0

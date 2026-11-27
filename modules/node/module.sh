@@ -9,7 +9,7 @@ node_validate() {
 # Inspect again in apply: each Runner hook has its own shell and nvm function.
 node_inspect() {
   shell_state=0
-  shell_check || shell_state=$?
+  shell_runtime_status || shell_state=$?
   case "$shell_state" in 0|10) ;; *) return "$shell_state" ;; esac
   nvm_state=0
   node_load_nvm || nvm_state=$?

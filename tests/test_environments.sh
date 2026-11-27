@@ -110,17 +110,20 @@ for payload in 'scalar|git|' 'array|1|' 'array|2|git|shell' \
   unchanged
 done
 
-# Record dispatch and arguments at the existing all adapters. Invalid requests
+# Record dispatch and arguments at the Runner boundary. Invalid requests
 # must be rejected before dispatch or any manifest read.
 export TRACE="$tmp/trace"
 cat >> "$project/core/cli.sh" <<'HOOKS'
-workspace_configure() { echo workspace >> "$TRACE"; }
-configure_git() { echo "git $1" >> "$TRACE"; }
-configure_github() { echo "github $1 $2" >> "$TRACE"; }
-shell_configure() { echo shell >> "$TRACE"; }
-run_install() { echo "$1 ${NODE_VERSION}" >> "$TRACE"; }
 repository_read_list() { echo manifest >> "$TRACE"; }
-runner_run() { echo "$1" >> "$TRACE"; }
+runner_run() {
+  RUNNER_STATUS=SKIPPED RUNNER_PHASE=check RUNNER_REASON=ready
+  case $1 in
+    git) echo "git $identity_profile" ;;
+    github) echo "github $github_profile $github_method" ;;
+    iterm|node) echo "$1 $node_request" ;;
+    *) echo "$1" ;;
+  esac >> "$TRACE"
+}
 HOOKS
 printf '%s\n' 'DEFAULT_AUTH_METHOD=gh' 'DEFAULT_GITHUB_PROFILE=secondary' > "$profile"
 : > "$TRACE"

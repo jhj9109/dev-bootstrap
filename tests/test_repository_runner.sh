@@ -86,7 +86,7 @@ expect 10 "${REGISTRY_VERIFY[index]}"
 for bad in 'class/one' 'other/one' 'other/ONE' 'bad input' '../bad' 'owner/.git'; do
   printf 'class/one\n%s\n' "$bad" > "$list"
   expect 2 "${REGISTRY_CHECK[index]}"
-  expect 1 "$cli" all --no-passphrase
+  expect 2 "$cli" all --no-passphrase
   [[ ! -e $workspace && ! -e $HOME/.ssh && ! -s $TRACE ]]
 done
 printf ' # comment\nclass/one\n class/two # second' > "$list"
@@ -97,9 +97,24 @@ grep -Fq 'check returned 1' "$tmp/output"
 [[ ! -s $TRACE && ! -e $workspace/one && $(cat "$workspace/two") == keep ]]
 rm "$workspace/two"
 rmdir "$workspace"
+# Change the manifest during Workspace apply, before Repository's first hook.
+# Two restores must still use the original snapshot, with a single Workspace mkdir.
+cp "$list" "$tmp/planned-list"
+cat > "$tmp/bin/mkdir" <<'MOCK'
+#!/bin/sh
+if [ "$1" = -p ] && [ "$2" = -- ] && [ "$3" = "$HOME/Work Area" ]; then
+  echo mkdir >> "$TRACE"
+  echo 'changed/during-run' > "$MANIFEST"
+fi
+exec /bin/mkdir "$@"
+MOCK
+chmod +x "$tmp/bin/mkdir"
+export MANIFEST="$list"
 expect 0 "$cli" all --profile secondary --no-passphrase
 grep -Fq 'repository: SUCCESS' "$tmp/output"
-[[ $(cat "$TRACE") == $'clone\nclone' ]]
+[[ $(cat "$TRACE") == $'mkdir\nclone\nclone' && $(cat "$list") == 'changed/during-run' ]]
+mv "$tmp/planned-list" "$list"
+rm "$tmp/bin/mkdir"
 for name in one two; do
   [[ $(git -C "$workspace/$name" config remote.origin.url) == "git@github-secondary:class/$name.git" ]]
 done

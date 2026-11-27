@@ -79,6 +79,22 @@ Phase 1의 `runner_run <id>`는 SUCCESS와 SKIPPED에 0을, 나머지 상태에 
 
 `check` 명령은 변경 필요를 표시하고 비영 종료하며 apply를 호출하지 않는다. `plan`과 `all --dry-run`은 설정·계획 검증과 대상·순서·선행 조건 표시에 한정한다. 실행 요약은 각 ID, 상태, 실패 단계·사유와 재실행 명령을 담는다. 새 집계 CLI는 모든 목표 충족 시 0, 실행 미완료 시 1, 입력·설정·계획 오류 시 2다. 기존 단일 명령의 종료 코드는 호환 테스트로 고정한다.
 
+### T17 실행 문맥과 집계
+
+`runner_run <id> [apply|check]`는 두 모드에서 같은 플랫폼 검사와 check 훅을 사용한다. check 전용 모드에서 코드 10은 `CHANGE_NEEDED`로 끝난다. `SUCCESS`와 `SKIPPED`만 후행 훅의 실행을 허용한다. Runner는 읽기 전용 선행 검사 결과도 요약에 포함하며 `BLOCKED` 행에 직접 선행 ID와 그 상태를 기록한다. 실행 훅에서 나온 오류는 해당 단계·원본 코드와 함께 미완료(1)로 집계한다.
+
+범용 명령의 훅은 `PROFILE`, `METHOD`, `NO_PASSPHRASE`에서 확정한 계정·인증 방식·SSH 키 정책을 읽는다. CLI가 기존 훅에 전달하는 지역 변수는 다음과 같다.
+
+| 훅 | 실행마다 확정하는 값 |
+|---|---|
+| Git | `identity_profile`, `identity_scope`, `identity_repo`. 단일 Git의 로컬 범위와 경로를 포함한다. |
+| GitHub | `github_profile`, `github_method`, `github_unencrypted`. SSH 로컬 완료와 원격 계정 검증은 별개다. |
+| Node·Python | `node_request`, `python_request`, `python_method`. 명시한 버전·방식을 해당 호출의 설정에 먼저 반영해 Planner와 훅이 같은 전략을 본다. |
+| Shell | 일괄 적용과 단일 Shell 대상은 환경의 활성 조각을 기준으로 삼는다. 단일 Node·uv의 선행 확인은 기존 목록에 요청한 조각이 활성화돼 있는지 검사한다. |
+| Repository | `repository_profile`, `repository_method`, `repository_snapshot`. 실행 대상 또는 검사할 선행에 포함되면 첫 훅 전에 복원 목록을 한 번 읽는다. 빈 목록도 확정된 스냅샷이다. |
+
+`RUNNER_PLANNED=1`인 범용 실행에서는 선행 상태가 도중에 달라져도 Node·uv가 Shell을 복구하거나 Repository가 Workspace를 만들지 않는다. 기존 개별 명령은 해당 어댑터에서 복구와 종료 코드 변환을 수행한다.
+
 ## 부수 효과와 테스트
 
 check와 verify는 읽기 전용이다. 설치, 로그인, 셸 설정 수정, 자동 다운로드를 유발하는 탐색을 금한다. apply만 소유 경로와 명시적 대상 저장소를 변경한다. 공유 셸 파일은 공통 helper를 통한다. 재시도 시 기존 키나 다른 origin을 덮어쓰지 않는다. 경로와 부모의 링크를 검사하고 임시 파일은 실패 시 정리한다. 대화가 필요하면 TTY와 명시 옵션을 확인하고 비대화형에서는 원인을 출력한다. 로그에는 ID·단계·간결한 오류를 쓰며 토큰, 개인키, 자격 증명이 포함된 URL은 기록하지 않는다.

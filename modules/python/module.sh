@@ -24,7 +24,7 @@ python_inspect() {
       return 10 ;;
     uv)
       shell_state=0
-      shell_check || shell_state=$?
+      shell_runtime_status || shell_state=$?
       case "$shell_state" in 0|10) ;; *) return "$shell_state" ;; esac
       uv_state=0
       python_uv_status || uv_state=$?

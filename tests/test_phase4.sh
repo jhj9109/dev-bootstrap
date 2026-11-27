@@ -18,8 +18,8 @@ CONF
 printf 'keep\n' > "$HOME/Documents/keep.txt"
 "$TMP/project/setup.sh" configure workspace >/dev/null
 [[ "$(cat "$HOME/Documents/keep.txt")" == keep ]]
-# Clone and all still call the legacy Workspace function. Make an accidental
-# dispatch through the registered check fail in this temporary project.
+# The dedicated clone adapter still prepares its own Workspace.
+cp "$TMP/project/modules/workspace/module.sh" "$TMP/workspace-module"
 printf '\nworkspace_status() { return 23; }\n' >> "$TMP/project/modules/workspace/module.sh"
 # Real local Git fixture; exercise remote changes without contacting GitHub.
 git init -q "$TMP/fixture"
@@ -42,6 +42,7 @@ for spec in '../bad' 'owner/../bad' 'owner/bad/path'; do
 done
 if "$TMP/project/setup.sh" repo clone owner/project --method gh --dest relative >/dev/null 2>&1; then echo 'relative path accepted'; exit 1; fi
 if "$TMP/project/setup.sh" repo remote owner/project >/dev/null 2>&1; then echo 'missing repo accepted'; exit 1; fi
+mv "$TMP/workspace-module" "$TMP/project/modules/workspace/module.sh"
 # all: disable network installers; use mocked ssh and a temporary HOME.
 cat >> "$TMP/project/config/defaults.conf" <<'CONF'
 INSTALL_NODE=false

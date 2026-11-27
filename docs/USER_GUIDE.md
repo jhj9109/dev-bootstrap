@@ -199,6 +199,21 @@ other-account/frontend
 
 두 명령은 환경, 계정, 인증 방식, 대상 OS와 모듈별 실행 순서·선행 조건을 표시합니다. 설치나 인증 상태를 조회하지 않으며 유효한 계획은 코드 0으로 종료합니다. 선행 모듈을 빠뜨리거나 뒤에 놓으면 코드 2로 종료하므로 출력된 모듈명을 보고 배열을 수정하세요. Node와 uv Python 앞에는 `shell`, 일괄 저장소 복원 앞에는 `workspace`를 두세요. 소스 방식 Python은 단독으로 선택할 수 있습니다. `shell`을 생략하면 기존 셸 활성 목록이 유지됩니다.
 
+### 상태 검사와 적용
+
+```bash
+./setup.sh check --environment minimal
+./setup.sh apply workspace
+./setup.sh check git --profile secondary --repo "$HOME/Documents/project"
+./setup.sh apply python --method source --version 3.12.7
+```
+
+`check`는 각 목표를 읽기 전용으로 검사합니다. `SKIPPED`는 이미 충족, `CHANGE_NEEDED`는 변경 필요, `FAILED`는 진단 또는 실행 실패입니다. `apply`와 `all`은 환경 목록 순서대로 필요한 변경을 적용하고 검증합니다. 모듈 ID를 붙인 `check`와 `apply`는 등록된 해당 대상과 선행 모듈만 다룹니다. 단일 `apply`는 대상만 변경하므로, 선행이 미충족이면 요약에 표시된 선행 모듈부터 적용한 뒤 재시도하세요. Shell 적용은 선택한 환경의 활성 조각을 따릅니다. 단일 Node·uv의 셸 조각도 준비하려면 해당 런타임을 환경에 포함하세요.
+
+공통 옵션은 `--profile`, 인증 방식 `--method ssh|gh`, SSH용 `--no-passphrase`입니다. 단일 Git에는 `--global` 또는 `--repo PATH`, 단일 Node·Python에는 `--version`, 단일 Python에는 설치 방식 `--method uv|source`를 지정할 수 있습니다. `--dry-run`은 `all`에서 사용합니다.
+
+요약은 ID별 결과·단계·사유와 재실행 명령을 보여줍니다. 선행이 실패한 항목은 `BLOCKED`로 표시하고 독립 항목은 계속 실행합니다. 모든 목표가 충족되면 0, 변경 필요 또는 실행 미완료면 1, 옵션·설정·계획이 잘못되면 2로 종료합니다. 복원 목록 형식 오류도 첫 훅 전에 2로 종료합니다. 빈 환경 목록의 전체 검사는 0입니다.
+
 `config/defaults.conf`에서 공통 기본값을 지정합니다.
 
 ```bash
