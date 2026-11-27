@@ -60,7 +60,7 @@ for tool in node python; do
 done
 rm "$HOME/.config/dev-bootstrap/env.zsh"
 [[ ! -e "$HOME/Applications" ]]
-"$TMP/project/setup.sh" help | grep -q 'Phase 4'
+"$TMP/project/setup.sh" help | grep -q 'Dev Bootstrap v2'
 printf '0\n' | "$TMP/project/setup.sh" >/dev/null
 for args in 'install python --version bad' 'install python --method invalid' 'install node --version bad' 'install iterm --version 1' 'configure shell --extra' 'install unknown'; do
   set +e

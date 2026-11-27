@@ -1,102 +1,28 @@
-# Dev Bootstrap v1.0 — Phase 4
+# Dev Bootstrap v2
 
-공용 macOS iMac에서 매주 삭제되는 개인 홈 디렉터리의 개발 환경을 다시 구성하기 위한 Bash 도구입니다. **기본 GitHub 인증은 SSH**이며 `gh` CLI를 대체 방식으로 지원합니다. 관리자 권한 없이 실행하는 것을 목표로 합니다.
+매주 HOME이 초기화되는 교육장 Intel iMac에서 Git 작성자, GitHub 인증 설정, zsh, 개발 도구와 저장소를 복원합니다. 실행기는 Bash이며 관리자 권한 없이 사용자 경로에 설치합니다.
 
-> 사용 전 반드시 [사용 설명서](docs/USER_GUIDE.md)를 읽으세요. 특히 `all`은 설치 파일 다운로드와 사용자 환경 변경을 수행합니다. GitHub 공개키 등록은 자동으로 수행하지 않습니다.
-
-## 빠른 시작
+## 처음 실행할 때
 
 ```bash
-git clone https://github.com/OWNER/dev-bootstrap.git # 실제 게시한 저장소 주소로 교체
+git clone --branch refactor/dev-bootstrap-v2 https://github.com/jhj9109/dev-bootstrap.git
 cd dev-bootstrap
 cp -n config/accounts.conf.example config/accounts.conf
-# config/accounts.conf에서 사용할 필드의 주석을 풀고 사용자명과 이메일을 입력
-./setup.sh doctor
-./setup.sh                  # 대화형 메뉴
-./setup.sh all              # 전체 구성; 인증 단계에서 사용자 입력 필요
+# 사용할 계정 필드의 주석을 풀고 사용자명과 이메일을 입력합니다.
+./setup.sh list
+./setup.sh plan --environment minimal --profile personal
+./setup.sh check workspace
+./setup.sh apply workspace
+./setup.sh check workspace
 ```
 
-## 명령
+기본 Workspace는 `~/Documents`입니다. 새 HOME에서 첫 검사는 `CHANGE_NEEDED`와 코드 1을 반환합니다. 적용 후 검사는 `SKIPPED`와 코드 0입니다. `plan`과 `all --dry-run`은 훅을 실행하지 않습니다. 실제 `all`은 선택한 환경 순서대로 변경하고, 실패한 모듈에 의존하는 항목은 차단하며 독립 항목은 계속합니다.
 
-```bash
-./setup.sh help
-./setup.sh doctor
-./setup.sh doctor github --profile personal
-./setup.sh configure git --profile personal
-./setup.sh configure github --profile personal          # SSH 기본
-./setup.sh configure github --profile secondary
-./setup.sh configure github --method gh --profile personal
-./setup.sh configure shell
-./setup.sh configure workspace
-./setup.sh install node --version 24
-./setup.sh install python --version 3.12 --method uv
-./setup.sh install python --version 3.12.7 --method source
-./setup.sh install iterm
-./setup.sh repo clone OWNER/REPO --profile personal
-./setup.sh repo clone OWNER/REPO --method gh
-./setup.sh repo clone OWNER/REPO --dest /absolute/path
-./setup.sh repo remote OWNER/REPO --repo /absolute/existing/repo --name origin
-./setup.sh all --profile personal
-./setup.sh all --environment minimal --profile personal
-```
+## 매주 복원할 때
 
-기본 Workspace는 `~/Documents`입니다. `repo clone`은 목적지가 존재하고 동일한 `origin`을 가진 Git 저장소라면 건너뜁니다. `repo remote`는 기존 원격 주소가 다를 때 덮어쓰지 않습니다.
+- 개인 설정과 복원할 저장소 목록을 신뢰하는 백업에서 준비합니다. 계정 파일에는 사용자명·이메일만 기록합니다. 기본 인증은 SSH이며 공개키 등록은 사용자가 수행합니다.
+- `./setup.sh doctor`로 플랫폼과 도구를 확인합니다. `classroom`은 전체 교육장 구성, 기본 `minimal`은 Workspace·Git·GitHub·Shell입니다. `--profile`은 환경과 독립적으로 계정을 선택합니다.
+- `./setup.sh`로 메뉴를 열거나 `./setup.sh help`에서 등록된 명령을 확인합니다. 기존 install/configure/repo 명령과 메뉴 번호 0~11을 계속 사용할 수 있습니다.
+- 실제 설치 전 `./setup.sh all --dry-run`으로 대상을 검토합니다. 설치 파일의 출처와 검증 수준은 도구마다 다릅니다. [다운로드 및 복구 한계](docs/DESIGN_AND_LIMITATIONS.md)
 
-## 저장소 일괄 복원
-
-```bash
-cp config/repositories.conf.example config/repositories.conf
-```
-
-`config/repositories.conf`에 `OWNER/REPO`를 한 줄씩 입력하세요. `all`의 활성 목록에 `repository`가 있으면 선택한 프로필과 인증 방식으로 복제합니다. 복제 목적지 이름이 중복되면 충돌이 발생하므로 별도로 관리하세요.
-
-## 설정 및 보안
-
-- `config/defaults.conf`에서 기본 환경을 `DEFAULT_ENVIRONMENT`로 선택합니다. 기본값은 `classroom`입니다.
-- `config/environments/minimal.conf`는 Workspace·Git·GitHub·Shell을 선택합니다. `all`과 메뉴 10번은 `ENABLED_MODULES`의 순서대로 실행합니다. 목록이 미설정인 `classroom`에서는 기존 `INSTALL_NODE`, `INSTALL_PYTHON`, `INSTALL_ITERM`을 적용합니다.
-- `config/accounts.conf`에는 personal·secondary 계정의 사용자명과 이메일을 지정합니다. 기존 `config/profiles.conf`의 계정 및 개발 설정도 계속 적용됩니다. 같은 계정 필드는 accounts.conf가 우선하며, 명시적인 빈 문자열은 해당 값을 지웁니다. 두 개인 파일은 Git에서 제외됩니다.
-- `config/repositories.conf`: 개인 복제 목록. `.gitignore`로 제외됩니다.
-- `.conf` 파일은 Bash로 `source`되므로 **신뢰할 수 있는 내용만** 작성하세요.
-- SSH 개인키, 액세스 토큰, 비밀번호는 Git에 커밋하지 마세요.
-- SSH 개인키는 `~/.ssh/dev-bootstrap-personal` / `...-secondary`에 생성합니다. 기존 키를 덮어쓰지 않습니다.
-- SSH 키는 GitHub Settings → SSH and GPG keys에 직접 등록하고 `doctor github`로 검증해야 합니다.
-- `--no-passphrase`는 SSH 키를 암호화하지 않고 생성하므로 공용 기기에서 사용을 권장하지 않습니다.
-- 매주 홈 디렉터리가 초기화된다면 GitHub에 사용하지 않는 SSH 공개키가 누적될 수 있으므로 정리해야 합니다.
-- `gh` 방식은 사전에 `gh`가 설치되어 있어야 하며, 여러 계정은 `gh auth switch`로 활성 계정을 직접 선택해야 합니다.
-- Node는 nvm, Python은 uv(기본) 또는 소스 빌드, iTerm2는 `~/Applications`를 사용합니다. 다운로드 무결성 검증은 아직 강화가 필요합니다.
-
-## 테스트
-
-```bash
-./scripts/verify.sh
-```
-
-테스트는 임시 HOME을 사용합니다. 네트워크 설치와 실제 GitHub 인증을 검증하지 않으며, macOS 실기기에서 추가 확인해야 합니다.
-
-## 문서
-
-- [사용 설명서](docs/USER_GUIDE.md): 최초 설치, 매주 복구, 명령어, 문제 해결
-- [설계 및 운영 참고](docs/DESIGN_AND_LIMITATIONS.md): 구성 요소, 동작 규약, 한계, 향후 개선
-
-### Interactive configuration reload (debug fix)
-
-The interactive menu reloads `config/defaults.conf`, the selected environment, `config/profiles.conf`, and `config/accounts.conf` before
-running each selection. You may edit `accounts.conf` in another editor and choose
-`2. Configure Git identity` without restarting the menu. An invalid configuration
-blocks that selection and displays an error. Configuration files are sourced as
-trusted Bash code; do not load files from untrusted sources.
-
-Regression test: `bash tests/test_menu_reload.sh`.
-
-### iTerm2 download progress
-
-`./setup.sh install iterm` displays curl's download progress bar when stderr is
-attached to a terminal. It also reports the download, extraction, and copy stages,
-and elapsed time on completion. Redirected/non-interactive runs display stage logs
-without a continuously updated progress bar. Connections time out after 15 seconds;
-transfers that stay below 1 KiB/s for 30 seconds are aborted and curl retries up
-to two times. This detects a stalled download; it does not guarantee that a slow
-but healthy network will finish. Archive signature/checksum verification is not yet
-implemented.
-
-Run the isolated mock test with `bash tests/test_iterm_progress.sh`.
+계정 설정·셸 이관·복제·오류별 재실행은 [사용 설명서](docs/USER_GUIDE.md), 오프라인 매트릭스와 실기기 검사는 [테스트 지침](docs/TESTING.md), 장비 검증 진행 상태는 [STATUS](STATUS.md)에 있습니다.

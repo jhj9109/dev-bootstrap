@@ -59,6 +59,14 @@ register_module --id node --name Node.js --platforms 'Darwin Linux' \
   --check node_check --apply node_apply --verify node_check
 
 node_command_install() {
-  run_install node "$@"
+  parse_install_options "$@" || return $?
+  [[ "$INSTALL_METHOD" == "$PYTHON_INSTALL_METHOD" ]] || { log_error '--method is Python-only'; return 2; }
+  local node_request="${INSTALL_VERSION:-$NODE_VERSION}"
+  local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
+  runner_run node && return 0
+  case "$RUNNER_PHASE:$RUNNER_HOOK_STATUS" in
+    verify:*|apply:5) return 5 ;;
+    *) return 1 ;;
+  esac
 }
 register_command 'install node' node_command_install '[--version X.Y.Z]' 5 'Install Node.js'

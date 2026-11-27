@@ -3,7 +3,7 @@
 menu() {
   local choice slot
   while :; do
-    printf '\nDev Bootstrap v1.0 (Phase 4)\n1. Check environment\n'
+    printf '\nDev Bootstrap v2\n1. Check environment\n'
     for slot in "${!REGISTRY_MENU_HANDLERS[@]}"; do
       printf '%s. %s\n' "$slot" "${REGISTRY_MENU_LABELS[slot]}"
     done

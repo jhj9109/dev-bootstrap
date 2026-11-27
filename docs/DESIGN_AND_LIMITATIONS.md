@@ -1,50 +1,23 @@
-# Dev Bootstrap — 설계 및 운영 참고
+# v2 설치 검증과 운영 한계
 
-## 구성
+## 다운로드 경계
 
-- `setup.sh`: CLI 인자 해석, 메뉴, 전체 실행 순서
-- `lib/config.sh`: 기본값 및 개인 설정 로드, 주요 설정 검증
-- `lib/profiles.sh`: personal/secondary GitHub 계정 프로필
-- `lib/platform.sh`: 비파괴 진단 (`doctor`)
-- `modules/auth/ssh.sh`: 키 및 SSH Host 구성
-- `modules/auth/gh.sh`: GitHub CLI HTTPS 인증
-- `modules/git.sh`: Git 작성자 설정
-- `modules/node.sh`, `python.sh`, `shell.sh`, `iterm.sh`: 개발 도구 설치
-- `modules/workspace.sh`: Workspace 디렉터리 관리
-- `modules/repository.sh`: clone, remote 추가
+직접 다운로드하는 세 설치 경로(nvm·uv 설치 스크립트, Python 소스)와 iTerm2는 HTTPS URL에서 curl로 리디렉션을 따라간다. 저장소는 배포자 서명이나 신뢰한 별도 해시 목록을 대조하지 않는다. 아래의 설치 후 검사는 버전·경로·구조를 판정한다. 셸 조각의 Git 해시는 이전에 게시한 내용이 편집됐는지 확인하는 로컬 기록이다.
 
-## 실행 흐름
+| 대상 | 출처와 고정 범위 | 적용·검증 주체 | 실패 후 남는 상태와 재시도 |
+|---|---|---|---|
+| nvm | raw.githubusercontent.com/nvm-sh/nvm/**v0.40.3**/install.sh. 태그를 지정하며 커밋 SHA·스크립트 해시는 고정하지 않는다. | Bash로 실행하고 PROFILE=/dev/null, NVM_DIR=~/.nvm을 전달한다. 이후 nvm.sh를 로드해 nvm 함수를 확인한다. 기존 nvm의 버전은 강제하지 않는다. | 임시 설치 스크립트는 EXIT에서 삭제한다. 설치기가 만든 ~/.nvm은 남을 수 있다. nvm.sh 없이 내용이 남으면 자동 덮어쓰기를 중단한다. |
+| Node | 설치된 nvm의 배포 경로와 미러 설정을 따른다. 기본 Node 배포처는 nodejs.org/dist이며 프로젝트가 URL을 고정하지 않는다. 기본 요청 24는 패치 버전을 고정하지 않는다. | nvm install/use/alias에 취득·배포 체크섬 처리를 위임한다. 로컬 nvm version 조회로 요청 버전과 default alias를 대조한다. 현재 nvm·미러가 수행한 서명 또는 해시 검증을 별도로 감사하지 않는다. | 캐시·설치 버전·alias는 nvm이 관리한다. 이후 단계 실패 시 설치한 버전을 지우지 않으며 재실행에서 남은 alias·셸 상태를 검사한다. |
+| uv 및 관리 Python | astral.sh/uv/install.sh는 uv 릴리스를 고정하지 않는다. Python 배포물은 설치된 uv의 관리 배포 카탈로그와 요청 버전을 따른다. 기본 3.12는 패치 버전이 바뀔 수 있다. | 설치 스크립트를 sh로 실행해 ~/.local/bin에 배치한다. Python 다운로드·무결성 처리는 uv에 위임한다. uv python find의 오프라인 관리 버전 조회로 결과를 확인한다. 이 도구가 Python 아카이브의 체크섬이나 서명을 직접 검사하지 않는다. | 임시 스크립트는 EXIT에서 제거한다. uv 실행 파일·캐시·관리 인터프리터는 남을 수 있다. 예기치 않은 uv 조회 오류에서는 재설치를 중단한다. |
+| Python Source | www.python.org/ftp/python/X.Y.Z/Python-X.Y.Z.tgz. 전체 버전 필수. | tar로 풀어 configure와 make를 실행한다. 빌드 전 해시·서명 검사는 없다. staging과 최종 prefix에서 실제 버전·표준 라이브러리·sys.prefix를 확인한다. | ~/.local/.python-build.* 아래 아카이브와 staging을 EXIT에서 정리한다. 검증 뒤 ~/.local/python-X.Y.Z에 게시한다. 이미 게시된 경로의 검증 실패는 보존하고 보고한다. |
+| iTerm2 | iterm2.com/downloads/stable/latest. stable이 가리키는 릴리스는 변한다. | 빈 ZIP 거부, ditto 추출, 예상 앱 디렉터리와 링크 검사 후 복사한다. 기존 앱은 디렉터리 존재로 판정한다. codesign·spctl·배포 체크섬 검사나 앱 실행은 하지 않는다. | 임시 다운로드 디렉터리와 ~/Applications/.iterm-install.* staging을 EXIT에서 정리한다. 완성된 번들만 같은 파일시스템에서 게시하며 기존 목적지를 덮어쓰지 않는다. |
 
-`all`: Workspace → Git 작성자 → GitHub 인증 → Shell → Node → Python → iTerm2 → 선택적 저장소 목록 복제 → 실패 건수 요약. 설치 옵션 `INSTALL_*`이 false면 해당 단계 생략. 개별 단계 실패 시 다른 단계는 계속 진행하지만 전체 종료 코드는 실패가 됩니다.
+EXIT 정리는 정상 종료 및 처리 가능한 오류 경로에 해당한다. 강제 종료 후에는 실행 중인 작업과 남은 staging·잠금을 확인한다. 전체 실행에는 트랜잭션 롤백이나 영속 재시도 이력이 없다. 동일 설정으로 다시 실행하면 각 모듈이 현재 상태를 검사한다.
 
-## 안전성 원칙
+## 계정과 사용자 파일
 
-1. 기존 SSH 키 및 사용자 설정 파일은 무조건 삭제하지 않습니다.
-2. SSH 관리용 설정은 별도 파일로 분리하고 기존 config에는 Include를 추가합니다.
-3. 이미 존재하는 저장소 또는 원격 URL이 다르면 자동 덮어쓰지 않습니다.
-4. doctor는 변경하지 않습니다.
-5. 임시 HOME 기반 테스트로 멱등성을 확인합니다.
+SSH 로컬 설정 완료 후 공개키 등록·폐기와 원격 계정 검증은 별도다. gh 방식은 사전 설치한 gh와 선택 계정의 로그인이 필요하다. 복원 목록은 하나의 계정·인증 방식을 공유한다. 같은 origin의 기존 저장소는 fetch/pull 없이 보존하며 다른 origin은 충돌로 처리한다. 편집된 셸 로더와 모호한 SSH 설정은 사용자가 내용을 검토한 뒤 재시도한다. 신뢰하는 저장소와 설정만 사용한다. 모듈과 개인 설정은 Bash 코드로 로드된다.
 
-## 알려진 한계
+## 확장 범위
 
-- 현재 `all`은 완전한 무인 자동화가 아닙니다. SSH 키 암호 입력과 GitHub 공개키 등록이 필요합니다.
-- SSH 공개키의 GitHub 등록/폐기 자동화는 없습니다.
-- `gh` CLI 설치는 제공하지 않으며, 다중 HTTPS 계정별 자동 인증 매핑도 없습니다.
-- nvm, uv 설치 스크립트와 iTerm2 다운로드에 대해 독립적인 체크섬·서명 검증을 구현하지 않았습니다.
-- macOS 실제 장비의 다운로드·설치 및 인증 성공은 아직 검증되지 않았습니다.
-- `all`은 실패한 단계를 재시도하는 상태 파일이나 트랜잭션 롤백 기능이 없습니다. 명령을 다시 실행하면 각 모듈의 상태 검사를 활용합니다.
-- 저장소 목록은 기본 프로필/인증 방식 하나를 공유하며 저장소별 프로필 지정은 지원하지 않습니다.
-- `repo clone`은 이미 존재하는 저장소의 origin만 검사하고 fetch/pull하지 않습니다.
-- `repo remote`는 기존 remote URL을 변경하지 않습니다.
-- 일부 설정 검증은 형식 중심이며, 모든 파일 시스템 경로·심볼릭 링크 조합을 포괄적으로 방어하지 않습니다. 신뢰할 수 있는 사용자 환경에서 실행해야 합니다.
-- Python uv 설치가 시스템 기본 `python3` 명령을 대체하지는 않습니다.
-- iTerm2는 최신 stable URL을 사용하므로 정확한 버전 재현성이 없습니다.
-
-## 향후 개선 우선순위
-
-1. macOS 실기기 설치/인증 검증 및 설치 파일 체크섬 검증
-2. `--dry-run`, `--yes`, 실행 로그 파일, 재시도 옵션
-3. 설치 버전 잠금 및 플랫폼별 아티팩트 검증
-4. 저장소 목록에 프로필/브랜치/목적지 설정 지원
-5. GitHub CLI 설치와 안전한 다중 계정 지원
-6. ShellCheck, Bats 기반 테스트 및 macOS CI
+일반 모듈의 등록·메뉴·계획·실행은 공통 경로를 사용한다. 환경 이름은 classroom/minimal로 제한되고 범용 --version은 Node·Python만 지원한다. 새 모듈은 자기 설정 키로 목표를 전달할 수 있다. verify는 apply 후의 훅이며 독립 CLI 명령은 없다. Shell 활성 조각 선택과 기본 doctor의 진단 항목은 내장 도구에 맞춰져 있다. 실제 배포 파일 검증 강화와 Intel iMac에서의 설치·인증은 남은 운영 과제다. [확장성 검증 기록](TESTING.md)

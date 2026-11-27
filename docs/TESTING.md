@@ -100,17 +100,20 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 
 `tests/test_repository_runner.sh`는 Workspace 생성 시 목록 파일을 교체해 Repository의 검사·적용·검증이 처음 확정한 두 저장소를 끝까지 사용하는지 확인한다. 생성 호출이 한 번인지, 기존 개별 복제 명령이 계속 기본 목적지를 준비할 수 있는지도 검사한다.
 
-## Intel iMac 수동 검사
+## T21 Intel iMac 수동 검사 — 미실행
 
-교육장 장비에서 사용자가 승인한 테스트 계정과 별도 HOME을 사용한다. 설치와 실제 인증은 운영자와 일정을 정한 뒤 실행한다.
+교육장 운영자가 승인한 전용 macOS 테스트 사용자로 로그인한다. 실제 SSH와 gh는 사용자 홈·키체인·호스트 키·원격 계정에도 접근하므로 HOME 변수만 바꿔 운영 계정에서 시험하지 않는다. Git, Xcode CLI, curl, ditto, zsh, 테스트 저장소 읽기 권한, 기관이 확인한 GitHub 호스트 키 및 다운로드 가능한 네트워크를 준비한다. gh 방식에는 사전 설치한 gh가 필요하다. 일반 사용자 데이터 초기화는 이 절차에 포함하지 않는다.
 
-1. macOS·CPU·/bin/bash 버전과 Xcode CLI 경로를 기록한다. 기본 Bash 3.2로 문법 검사, 전체 오프라인 테스트, 메뉴와 설정 재로딩을 확인한다.
-2. v2 구현 후 classroom 및 minimal 계획을 비교한다. dry-run 전후 .ssh, .gitconfig, .zshrc와 Workspace의 내용·권한을 비교한다.
-3. SSH 키를 보호한 상태로 등록하고 올바른 계정과 잘못된 계정의 doctor 결과를 비교한다. gh 경로는 별도 계정 fixture로 확인한다.
-4. 실제 Node·Python 버전, 새 zsh 세션의 경로, iTerm2 실행, 저장소 origin을 확인한다. 동일 설정으로 다시 실행해 기존 파일과 키가 보존되는지 점검한다.
-5. 설치 중단과 복구, 초기화 후 개인 설정·저장소 목록 복원을 점검한다. 결과에는 OS, 선택 프로필, 성공·실패 단계만 남기고 인증 자료는 제외한다.
+| 단계 | 명령과 기대 결과 | 실패 시 확인 |
+|---|---|---|
+| 장비·소스 확인 | `sw_vers`, `uname -m`, `/bin/bash --version`, `xcode-select -p`, `git rev-parse HEAD`, `./setup.sh doctor`. x86_64, 기본 Bash 3.2, CLI 도구 경로를 기록한다. | OS·CPU와 도구 누락, 사용자 디렉터리 권한 |
+| 오프라인 회귀 | 기본 Bash가 PATH의 첫 bash인지 확인하고 `PATH=/bin:/usr/bin:$PATH /bin/bash scripts/verify.sh`를 실행한다. 설치된 두 Bash가 있으면 위 매트릭스도 실행한다. | 실패한 테스트 이름과 셸 버전, 실제 zsh 사용 여부 |
+| 계획과 사용자 파일 | `./setup.sh plan --environment minimal`, 같은 옵션의 `all --dry-run` 출력을 비교한다. classroom으로 반복한다. 전후 .gitconfig·.zshrc·.ssh와 Workspace의 내용·권한·링크를 로컬에서 대조한다. | 모듈 순서, 실제 환경 파일, 계정 선택, 예상 밖 변경 |
+| 인증과 복원 | 사용자 설명서 순서대로 SSH 설정 → 공개키 등록 → `./setup.sh doctor github --profile personal` 실행. gh는 승인된 별도 계정으로 검사한다. 목록에 테스트 저장소를 두고 all을 실행한다. | 로컬 설정 성공과 원격 인증을 구분해 호스트 키·사용자명·권한·origin 확인 |
+| 설치와 재실행 | 새 zsh에서 `nvm current`, `node --version`, `uv python find --managed-python` 확인. Source 설치 시 지정 prefix의 python 실행. iTerm2 앱을 직접 연다. 같은 all 재실행에서 SKIPPED와 사용자 파일 보존 확인. | PATH·active.list, Xcode 빌드 로그, 파일 소유권, Gatekeeper 및 배포 정책 |
+| 복구 | 전용 계정에서 설치 중단 후 같은 명령을 재시도한다. 운영자가 승인한 교육장 초기화 이후 개인 설정·저장소 목록으로 복원을 반복한다. | 잔여 staging·잠금과 기존 사용자 편집을 확인하고 자동 덮어쓰기 여부 점검 |
 
-T11에서는 Linux에서 Bash 5.2.37과 Apple 공개 소스를 Linux용으로 빌드한 Bash 3.2.57로 전체 검증을 실행했다. Intel iMac 기본 Bash와 실제 설치·외부 인증은 수동 확인 대상으로 남아 있다. 기존 시험의 추가 배경은 [테스트 리뷰 가이드](reviews/TEST_REVIEW_GUIDE.md)에 있다.
+기록에는 날짜, 장비·셸 버전, 커밋, 명령, 종료 코드와 기대 결과의 차이만 남긴다. 개인키·토큰·계정 파일·인증 출력 원문은 첨부하지 않는다. 실제 장비 결과가 있어야 T21을 완료로 표시한다.
 
 ## T18 및 Phase 5
 
@@ -135,3 +138,9 @@ T11에서는 Linux에서 Bash 5.2.37과 Apple 공개 소스를 Linux용으로 �
 | 설정 로더의 `config_validate_environment`가 환경 이름을 `classroom`과 `minimal`로 제한한다. | 새 모듈과 설정 키는 기존 환경 파일에서 활성화할 수 있다. 같은 내용의 `extension.conf`를 추가해도 `--environment extension plan`은 코드 2로 종료한다. |
 | 범용 CLI의 `parse_options`는 `--version`을 Node와 Python에만 연결한다. | `--keys SAMPLE_VERSION` 등록은 설정 로딩과 검증을 확장한다. `apply sample --version 3`은 코드 2로 종료하므로 예제 모듈의 버전 목표는 환경 파일에서 지정한다. |
 | 모듈 규약의 verify는 Runner가 변경 후 호출하는 훅이다. | 사후 검증 결과는 apply 요약의 verify 단계에서 확인한다. 성공을 반환한 쓰기가 실제 목표를 반영하지 못하는 경우도 이 단계에서 검출한다. |
+
+## T20 문서 명령 재현
+
+Linux의 임시 복제본에는 Git 추적 파일만 복사하고 빈 환경·임시 HOME·가상 계정값·file 전용 Git 전송을 사용했다. README의 설정 예시 복사, list/help, minimal plan과 같은 옵션의 all --dry-run 출력 일치, check workspace(1) → apply workspace(0) → check workspace(0)를 확인했다. configure git의 작성자, configure shell 이후 기존 .zshrc 줄 보존과 실제 zsh의 두 번 로드, 메뉴 11→0도 확인했다. 기본 doctor는 Linux와 xcode-select 부재를 보고하고 1로 종료했다.
+
+전체 매트릭스는 install node/python/iterm과 configure github·doctor github를 모의 배포·인증 도구로, repo clone/remote와 목록 복원을 로컬 Git 저장소로 검사한다. 이 결과가 다루는 범위는 명령 분기·파일 보존·실패 후 재시도다. 실제 배포 서비스, macOS 앱 실행과 GitHub 원격 인증은 T21에서 확인한다.

@@ -19,7 +19,7 @@ for script in setup.sh bootstrap.sh; do
   mkdir "$test_home"
   for help_option in help --help -h; do
     HOME="$test_home" "$entry" "$help_option" >"$TMP/output"
-    grep -q 'Phase 4' "$TMP/output"
+    grep -q 'Dev Bootstrap v2' "$TMP/output"
   done
   expect_usage_error plan --repo somewhere
   expect_usage_error all --dry-run --dry-run

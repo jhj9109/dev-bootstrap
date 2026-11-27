@@ -72,6 +72,16 @@ register_module --id python --name Python --platforms 'Darwin Linux' \
   --check python_check --apply python_apply --verify python_check
 
 python_command_install() {
-  run_install python "$@"
+  parse_install_options "$@" || return $?
+  local python_request="${INSTALL_VERSION:-$PYTHON_VERSION}" python_method="$INSTALL_METHOD"
+  local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
+  python_validate_request "$python_method" "$python_request" || return $?
+  runner_run python && return 0
+  case "$RUNNER_PHASE:$RUNNER_HOOK_STATUS" in
+    verify:*|apply:5) return 5 ;;
+    check:2|apply:2) return 2 ;;
+    check:3|apply:3) return 3 ;;
+    *) return 1 ;;
+  esac
 }
 register_command 'install python' python_command_install '[--version X.Y.Z] [--method uv|source]' 6 'Install Python'

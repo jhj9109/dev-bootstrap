@@ -2,7 +2,7 @@
 
 usage() {
   cat <<USAGE
-Dev Bootstrap v1.0 — Phase 4
+Dev Bootstrap v2
 Usage:
   ./setup.sh                              Interactive menu
   ./setup.sh doctor                       Read-only environment check
@@ -82,44 +82,6 @@ parse_install_options() {
   if [[ -n "$INSTALL_VERSION" && ! "$INSTALL_VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]]; then
     log_error 'Invalid version'; return 2
   fi
-}
-run_install() {
-  local target="$1"; shift
-  parse_install_options "$@" || return $?
-  case "$target" in
-    node)
-      [[ "$INSTALL_METHOD" == "$PYTHON_INSTALL_METHOD" ]] || { log_error '--method is Python-only'; return 2; }
-      local node_request="${INSTALL_VERSION:-$NODE_VERSION}"
-      local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
-      runner_run node && return 0
-      case "$RUNNER_PHASE:$RUNNER_HOOK_STATUS" in
-        verify:*|apply:5) return 5 ;;
-        *) return 1 ;;
-      esac ;;
-    python)
-      local python_request="${INSTALL_VERSION:-$PYTHON_VERSION}" python_method="$INSTALL_METHOD"
-      local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
-      python_validate_request "$python_method" "$python_request" || return $?
-      runner_run python && return 0
-      case "$RUNNER_PHASE:$RUNNER_HOOK_STATUS" in
-        verify:*|apply:5) return 5 ;;
-        check:2|apply:2) return 2 ;;
-        check:3|apply:3) return 3 ;;
-        *) return 1 ;;
-      esac ;;
-    iterm)
-      [[ -z "$INSTALL_VERSION" && "$INSTALL_METHOD" == "$PYTHON_INSTALL_METHOD" ]] || { log_error 'iTerm2 accepts no options'; return 2; }
-      local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS
-      local start=$SECONDS
-      if runner_run iterm; then
-        if [[ $RUNNER_STATUS == SKIPPED ]]; then log_ok 'iTerm2 already installed'
-        else log_ok "iTerm2 installed in ~/Applications ($((SECONDS - start))s total)"; fi
-        return 0
-      fi
-      case "$RUNNER_STATUS" in BLOCKED|UNSUPPORTED) return 3 ;; esac
-      case "$RUNNER_PHASE:$RUNNER_HOOK_STATUS" in verify:*|apply:5) return 5 ;; *) return 1 ;; esac ;;
-    *) log_error "Unknown install target: $target"; return 2 ;;
-  esac
 }
 run_workspace() {
   local RUNNER_STATUS RUNNER_PHASE RUNNER_HOOK_STATUS

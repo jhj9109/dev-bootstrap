@@ -1,4 +1,4 @@
-# Dev Bootstrap 사용자 설명서
+# Dev Bootstrap v2 사용자 설명서
 
 ## 1. 무엇을 하는 도구인가?
 
@@ -20,7 +20,7 @@ Dev Bootstrap은 매주 초기화되는 공용 iMac에서 개인 macOS 홈 디�
 
 ### 3.1 소스 준비
 
-이 ZIP 파일을 내려받아 압축을 풀거나, 직접 게시한 GitHub 저장소를 **HTTPS**로 복제하세요. SSH 키가 없는 초기 환경이므로 처음에는 HTTPS가 편리합니다.
+README의 v2 브랜치를 HTTPS로 복제하거나 같은 리비전의 ZIP을 풀어 사용하세요. SSH 키가 없는 초기 환경이므로 처음에는 HTTPS가 편리합니다.
 
 ```bash
 cd dev-bootstrap
@@ -82,7 +82,7 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 ./setup.sh repo clone OWNER/REPO
 ```
 
-위 과정을 한 번에 진행하려면 `./setup.sh all`을 사용할 수 있습니다. 이 명령은 사용자 프로필을 미리 설정해야 하며, GitHub SSH 공개키 등록을 기다리거나 자동으로 완료하지 않습니다. 일부 작업이 실패하면 다른 작업을 계속한 뒤 실패 개수를 출력하고 실패 종료 상태를 반환합니다.
+위 과정을 한 번에 진행하려면 `./setup.sh all`을 사용할 수 있습니다. 이 명령은 사용자 프로필을 미리 설정해야 하며, GitHub SSH 공개키 등록을 기다리거나 자동으로 완료하지 않습니다. 실패한 선행 모듈에 의존하는 항목은 훅 호출 없이 BLOCKED가 됩니다. 독립 항목은 계속 실행하고 마지막에 상태와 재실행 명령을 출력합니다.
 
 ## 5. SSH와 GitHub CLI 중 선택
 
@@ -163,7 +163,7 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 ### 여러 프로젝트 일괄 복원
 
 ```bash
-cp config/repositories.conf.example config/repositories.conf
+cp -n config/repositories.conf.example config/repositories.conf
 ```
 
 예시 파일:
@@ -238,6 +238,14 @@ PYTHON_INSTALL_METHOD=uv
 `minimal`의 기본 목록은 `ENABLED_MODULES=(workspace git github shell)`입니다. 환경 파일이나 개인 설정에서 이 형식으로 목록을 바꿀 수 있습니다. 등록된 모듈 ID를 각각 한 번씩 적으세요. 명시한 빈 배열 `ENABLED_MODULES=()`은 전체 실행에서 모든 단계를 건너뜁니다. `classroom`에 목록을 지정하지 않으면 Workspace·Git·GitHub·Shell과 저장소 복원을 포함하고, 기존 `INSTALL_NODE`, `INSTALL_PYTHON`, `INSTALL_ITERM` 중 값이 `true`인 설치 단계를 포함합니다. 명시한 배열이 있으면 그 목록이 우선합니다.
 
 설정 파일은 신뢰할 수 있는 Bash 코드만 사용하세요. 설정 오류는 코드 2로 종료하며, 메뉴 재로딩 중에는 해당 선택을 취소하고 마지막 정상 설정을 보존합니다.
+
+### 결과 읽기
+
+`SUCCESS`는 변경 후 검증 완료, `SKIPPED`는 이미 충족, `CHANGE_NEEDED`는 읽기 전용 검사에서 변경 필요를 뜻합니다. `BLOCKED`는 선행 모듈이나 도구 미충족, `UNSUPPORTED`는 플랫폼 불일치, `NEEDS_ACTION`은 계정 선택·인증·편집 파일 검토 등 사용자 조치가 필요한 상태입니다. `FAILED`는 해당 단계의 진단·적용·검증 실패입니다. 요약의 단계와 원본 훅 코드를 함께 확인하세요.
+
+기존 configure/install/repo는 명령별 코드를 유지합니다. 1은 일반 실패, 2는 인자·설정 또는 대상 오류, 3은 지원 환경·도구 부족, 4는 사용자 조치, 5는 사후 검증 실패에 쓰입니다. 일부 어댑터는 여러 실패를 1로 합칩니다. 단일 apply는 선행을 읽기 전용으로 확인하므로 개별 install의 자동 Shell 복구와 동작이 다릅니다.
+
+메뉴 1은 환경 진단, 2~4는 Git 작성자·GitHub 설정·원격 인증 확인, 5~7은 Node·Python·iTerm2 설치, 8~9는 Shell·Workspace 구성, 10은 all, 11은 도움말, 0은 종료입니다. 0을 제외한 선택마다 설정을 다시 읽습니다.
 
 ## 9. 테스트 및 확인
 
