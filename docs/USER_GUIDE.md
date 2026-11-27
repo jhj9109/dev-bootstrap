@@ -98,6 +98,8 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 
 `configure github`와 메뉴 3번은 로컬 키 쌍의 지문, 관리 파일, 실제 SSH 별칭의 HostName·User·IdentityFile·IdentitiesOnly를 검사합니다. 로컬 설정이 정상이면 `SKIPPED`로 종료하고 공개키 등록 경로와 인증 확인 명령을 표시합니다. 개인키만 남아 있으면 공개키를 임시 파일로 복구해 지문을 확인합니다. 암호가 필요한 복구는 대화형 터미널에서 실행하세요.
 
+교육장 OrbStack 구성에서는 주석과 빈 줄 다음에 `Include ~/.orbstack/ssh/config`가 있고, 그 뒤에는 관리용 Include만 올 수 있습니다. 도구는 OrbStack Include 순서를 유지하고 관리용 줄을 끝에 추가합니다. 지원하는 생성 파일은 관찰된 단일 `Host orb`와 여덟 지시문 형식입니다. 포트와 Helper의 숫자 인자는 가변입니다. 중첩 Include, 다른 Host·Match·추가 지시문, 링크 또는 그룹·기타 쓰기 가능한 OrbStack 설정 경로는 수동 검토 대상으로 남깁니다. GitHub 별칭 검사는 검증한 사용자 설정에서 해당 별칭에 적용되는 관리 블록만 OpenSSH에 전달합니다.
+
 다른 Include가 관리 파일을 중복해서 읽을 수 있거나, 같은 별칭이 이미 정의돼 있거나, Match exec·관리 파일 편집을 발견하면 자동 적용을 중단합니다. 기존 설정을 검토한 뒤 재실행하세요. 강제 종료 후 `~/.ssh/.dev-bootstrap.lock`이 남았다면 실행 중인 설정 작업과 보관된 원본을 먼저 확인하세요.
 
 `doctor github --method ssh`와 메뉴 4번은 별도 인증 검사입니다. 별칭과 로컬 키를 확인한 뒤 해당 키로 github.com에 접속해 GitHub가 반환한 계정을 비교합니다. 신뢰가 확인된 GitHub 호스트 키가 필요합니다. doctor는 호스트 키를 추가하거나 갱신하지 않습니다.

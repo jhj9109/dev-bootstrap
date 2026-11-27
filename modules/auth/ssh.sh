@@ -50,14 +50,51 @@ ssh_managed_hosts() {
   log_warn 'Review edited SSH managed file'; return 4
 }
 
+# Only the observed, literal Host orb layout is supported. Never pass the
+# Helper command or a live OrbStack Include to ssh, including for ssh -G.
+ssh_orbstack_config() {
+  local dir="$HOME/.orbstack" file="$HOME/.orbstack/ssh/config" path mode
+  local managed="$HOME/.ssh/dev-bootstrap.conf"
+  for path in "$dir" "$dir/ssh" "$file" "$HOME/.ssh/config" "$managed"; do
+    [[ $path != "$managed" || -e $path || -L $path ]] || continue
+    [[ -O $path && ! -L $path ]] || return 1
+    mode=$(ssh_mode "$path") && (( (8#$mode & 022) == 0 )) || return 1
+  done
+  [[ -d $dir && -d $dir/ssh && -f $file && -r $file ]] || return 1
+  LC_ALL=C awk '
+    BEGIN {
+      helper="/Applications/OrbStack.app/Contents/Frameworks/OrbStack Helper.app/Contents/MacOS/OrbStack Helper"
+    }
+    /^[[:blank:]]*(#|$)/ { next }
+    $0 == "Host orb" && !host { host=1; next }
+    !host || seen[$1]++ { exit 1 }
+    { fields++ }
+    NF==2 && (($1=="Hostname" && $2=="127.0.0.1") ||
+              ($1=="Port" && $2 ~ /^[0-9]+$/ && $2+0>0 && $2+0<65536) ||
+              ($1=="User" && $2=="default") ||
+              ($1=="IdentityFile" && $2=="~/.orbstack/ssh/id_ed25519") ||
+              ($1=="IdentitiesOnly" && $2=="yes") ||
+              ($1=="UserKnownHostsFile" && $2=="~/.orbstack/ssh/known_hosts") ||
+              ($1=="ProxyUseFdpass" && $2=="yes")) { next }
+    $1=="ProxyCommand" && $NF ~ /^[0-9]+$/ {
+      sub(/^[[:blank:]]*/, "")
+      if ($0=="ProxyCommand \047" helper "\047 ssh-proxy-fdpass " $NF) next
+    }
+    { exit 1 }
+    END { if (!host || fields!=8) exit 1 }
+  ' "$file"
+}
+
 ssh_include_state() {
   if [[ ! -e $HOME/.ssh/config ]]; then echo missing; return; fi
   # Unknown Includes can expand to the managed file. Match exec can execute
   # commands even in ssh -G. Require manual review for ambiguous configurations.
-  awk -v reserved="${1:-}" '
+  local state
+  state=$(awk -v reserved="${1:-}" '
     /^[[:space:]]*(#|$)/ { next }
     $0 == "Include ~/.ssh/dev-bootstrap.conf" { if (conditional || seen++) bad=1; next }
-    { line=tolower($0); sub(/^[[:space:]]*/, "", line)
+    $0 == "Include ~/.orbstack/ssh/config" { if (other || seen || orb++) bad=1; next }
+    { other=1; line=tolower($0); sub(/^[[:space:]]*/, "", line)
       if (line ~ /^(host|match)([[:space:]=]|$)/) conditional=1
       if (reserved && line ~ /^host([[:space:]=]|$)/) {
         sub(/^host[[:space:]=]+/, "", line); sub(/[[:space:]]+#.*/, "", line)
@@ -66,8 +103,14 @@ ssh_include_state() {
       }
       if (line ~ /^include([[:space:]=]|$)/ ||
           (line ~ /^match([[:space:]=]|$)/ && line ~ /exec/)) bad=1 }
-    END { if (bad) print "conflict"; else if (seen) print "present"; else print "missing" }
-  ' "$HOME/.ssh/config"
+    END {
+      if (bad || (orb && other)) print "conflict"
+      else if (orb) print (seen ? "orb-present" : "orb-missing")
+      else print (seen ? "present" : "missing")
+    }
+  ' "$HOME/.ssh/config") || return 1
+  case "$state" in orb-*) ssh_orbstack_config || state=conflict ;; esac
+  printf '%s\n' "$state"
 }
 
 ssh_effective_host() {
@@ -81,6 +124,16 @@ ssh_effective_host() {
     $1=="identityfile" { i++; sub(/^identityfile /,""); if ($0==key || $0==short) k++ }
     END { exit !(h==1 && n==1 && u==1 && o==1 && i==1 && k==1) }
   ' <<< "$output"
+}
+
+# The only active user settings for a GitHub alias in this layout are the
+# managed blocks. Inspect that projection, then recheck its source files.
+ssh_orbstack_effective() {
+  local expected_include=$1 existing=$2 proposed=$3 latest
+  ssh_render_hosts $proposed | ssh_effective_host -F /dev/stdin || return 5
+  ssh_safe_paths || return 1
+  latest=$(ssh_include_state "$PROFILE_ALIAS") && [[ $latest == "$expected_include" ]] &&
+    latest=$(ssh_managed_hosts) && [[ $latest == "$existing" ]] || return 4
 }
 
 ssh_mode() { stat -c %a "$1" 2>/dev/null || stat -f %Lp "$1"; }
@@ -103,7 +156,10 @@ ssh_inspect() {
   esac
   include=$(ssh_include_state "$PROFILE_ALIAS") || return 1
   [[ $include != conflict ]] || { log_warn 'Review conflicting SSH Host, Include or Match directives'; return 4; }
-  if [[ $desired != "$hosts" || $include != present ]]; then
+  if [[ $include == orb-* ]]; then
+    ssh_orbstack_effective "$include" "$hosts" "$desired" || return $?
+    [[ $desired == "$hosts" && $include == orb-present ]] || need=10
+  elif [[ $desired != "$hosts" || $include != present ]]; then
     # Test the proposed rules before creating keys or changing either config.
     if ! { ssh_render_hosts $desired && printf 'Host *\n' &&
            { [[ ! -e $config ]] || sed '/^Include ~\/\.ssh\/dev-bootstrap\.conf$/d' "$config"; }; } |
@@ -173,7 +229,15 @@ ssh_setup() (
   rc=0
   ssh_inspect || rc=$?
   [[ $rc == 10 ]] || return "$rc"
-  if [[ $include == missing ]]; then
+  if [[ $include == orb-missing ]]; then
+    [[ -w config ]] && cp -p config "$stage/old-config" &&
+      cp -p "$stage/old-config" "$stage/new-config" || return 1
+    # Preserve every original byte, including an unterminated final line.
+    if [[ -n $(tail -c 1 "$stage/old-config") ]]; then
+      printf '\n' >> "$stage/new-config" || return 1
+    fi
+    printf 'Include ~/.ssh/dev-bootstrap.conf\n' >> "$stage/new-config" || return 1
+  elif [[ $include == missing ]]; then
     printf 'Include ~/.ssh/dev-bootstrap.conf\n' > "$stage/new-config" || return 1
     if [[ -f config ]]; then
       [[ -w config ]] || return 1
@@ -212,8 +276,12 @@ ssh_setup() (
   ssh_safe_paths && [[ . -ef "$dir" ]] || return 1
   local latest
   latest=$(ssh_managed_hosts) && [[ $latest == "$hosts" ]] || return 1
+  latest=$(ssh_include_state "$PROFILE_ALIAS") && [[ $latest == "$include" ]] || return 4
   if ! ssh_publish_file dev-bootstrap.conf || ! ssh_publish_file config; then
     rc=1
+  elif [[ $include == orb-* ]]; then
+    ssh_orbstack_effective orb-present "$desired" "$desired" && return 0
+    rc=$?
   elif ! ssh_effective_host; then
     rc=5
   else
@@ -238,7 +306,15 @@ ssh_doctor() {
   include=$(ssh_include_state) || return 1
   [[ $include != conflict ]] || { log_warn 'Review SSH configuration before authentication'; return 4; }
   if [[ $include == present ]]; then ssh_managed_hosts >/dev/null || return $?; fi
-  ssh_effective_host || { log_warn 'SSH alias does not select the expected GitHub identity'; return 4; }
+  case "$include" in
+    orb-missing) return 4 ;;
+    orb-present)
+      local configured
+      configured=$(ssh_managed_hosts) || return $?
+      [[ " $configured " == *" $PROFILE_NAME "* ]] || return 4
+      ssh_orbstack_effective "$include" "$configured" "$configured" || return 4 ;;
+    *) ssh_effective_host || { log_warn 'SSH alias does not select the expected GitHub identity'; return 4; } ;;
+  esac
   # Use only the selected identity; ignore proxy commands, multiplexers and
   # other user-configured side effects. Unknown host keys require manual review.
   output=$(ssh -T -F /dev/null -i "$PROFILE_KEY" -o IdentitiesOnly=yes -o BatchMode=yes \

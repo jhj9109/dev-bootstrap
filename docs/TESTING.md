@@ -100,7 +100,13 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 
 `tests/test_repository_runner.sh`는 Workspace 생성 시 목록 파일을 교체해 Repository의 검사·적용·검증이 처음 확정한 두 저장소를 끝까지 사용하는지 확인한다. 생성 호출이 한 번인지, 기존 개별 복제 명령이 계속 기본 목적지를 준비할 수 있는지도 검사한다.
 
-## T21 Intel iMac 수동 검사 — 미실행
+## T21 Intel iMac 수동 검사 — 진행 중
+
+교육장 제공 결과는 기준 커밋 `18c05d7`, iMac20,1(x86_64), macOS 26.5.2(25F84), 시스템 Bash 3.2.57 및 zsh 5.9에서 얻었다. 문법 검사 59개와 회귀 테스트 26개가 통과했고 minimal·classroom 각각 plan과 dry-run 출력이 일치했다. Git·Workspace는 SKIPPED, Shell은 CHANGE_NEEDED였다. 관리 SSH 파일이 없는 상태에서 `check github --profile personal --method ssh`가 기존 OrbStack Include를 충돌로 판정했다(NEEDS_ACTION, check 훅 4).
+
+`tests/test_orbstack.sh`는 임시 HOME에 교육장의 단일 Host orb 구성을 재현한다. 시스템 OpenSSH의 `-G`로 orb의 유효 설정 전체를 전후 대조하고, 두 GitHub 별칭의 목적지·포트·키·프록시·known_hosts 격리를 검사한다. OpenSSH는 Include의 물결표를 로그인 사용자의 홈으로 확장하므로 이 비교에서만 두 Include를 임시 경로로 치환한다. configure·check·재실행, minimal all, 모의 원격 응답을 쓰는 doctor, 게시 직전 Include 내용 변경을 검사한다. 이 비교는 사용자 SSH 설정에 한정된다. iMac의 시스템 SSH 정책을 포함한 유효 설정과 실제 원격 인증은 현장 재검증 대기다.
+
+수정본을 전용 iMac 계정의 터미널에서 같은 check로 재검사한다. 새 키가 필요한 상태는 CHANGE_NEEDED, 적용 후 같은 check와 configure는 SKIPPED가 기대값이다. 승인 후 공개키를 등록하고 doctor로 원격 계정까지 확인한다. 실제 설치·새 zsh·교육장 초기화 후 복원도 아래 절차에 따라 결과를 확보해야 한다.
 
 교육장 운영자가 승인한 전용 macOS 테스트 사용자로 로그인한다. 실제 SSH와 gh는 사용자 홈·키체인·호스트 키·원격 계정에도 접근하므로 HOME 변수만 바꿔 운영 계정에서 시험하지 않는다. Git, Xcode CLI, curl, ditto, zsh, 테스트 저장소 읽기 권한, 기관이 확인한 GitHub 호스트 키 및 다운로드 가능한 네트워크를 준비한다. gh 방식에는 사전 설치한 gh가 필요하다. 일반 사용자 데이터 초기화는 이 절차에 포함하지 않는다.
 
