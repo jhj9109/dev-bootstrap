@@ -62,3 +62,39 @@ repository_apply() {
 register_module --id repository --name Repository --platforms 'Darwin Linux' --depends workspace \
   --prerequisites 'Cloning needs Git and remote read access (SSH alias and registered key, or HTTPS access for the gh method).' \
   --check repository_check --apply repository_apply --verify repository_check
+
+repository_command() {
+  (( $# >= 2 )) || return 2
+  local operation=$1 spec=$2 dest='' name=origin
+  shift 2
+  PROFILE="$DEFAULT_GITHUB_PROFILE" METHOD="$DEFAULT_AUTH_METHOD" REPO=''
+  while (( $# )); do
+    case "$1" in
+      --profile|--method|--repo|--dest|--name)
+        local opt="$1"; shift
+        [[ $# -gt 0 && -n "$1" && "$1" != --* ]] || { log_error "Missing $opt value"; return 2; }
+        case "$opt" in
+          --profile) PROFILE="$1";; --method) METHOD="$1";; --repo) REPO="$1";; --dest) dest="$1";; --name) name="$1";;
+        esac ;;
+      *) log_error "Unknown repo option: $1"; return 2;;
+    esac
+    shift
+  done
+  case "$PROFILE" in personal|secondary) ;; *) return 2;; esac
+  case "$METHOD" in ssh|gh) ;; *) return 2;; esac
+  case "$operation" in
+    clone) [[ -z "$REPO" && "$name" == origin ]] || return 2; repo_clone "$spec" "$PROFILE" "$METHOD" "$dest" ;;
+    remote) [[ -n "$REPO" && -z "$dest" ]] || { log_error 'remote requires --repo PATH'; return 2; }; repo_remote "$REPO" "$spec" "$PROFILE" "$METHOD" "$name" ;;
+    *) log_error 'Unknown repo operation'; return 2;;
+  esac
+}
+
+repository_command_clone() {
+  repository_command clone "$@"
+}
+register_command 'repo clone' repository_command_clone 'OWNER/REPO [--profile personal|secondary] [--method ssh|gh] [--dest ABS_PATH]'
+
+repository_command_remote() {
+  repository_command remote "$@"
+}
+register_command 'repo remote' repository_command_remote 'OWNER/REPO --repo PATH [--name origin] [--profile personal|secondary] [--method ssh|gh]'

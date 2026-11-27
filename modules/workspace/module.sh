@@ -15,3 +15,9 @@ workspace_status() {
 register_module --id workspace --name Workspace --platforms 'Darwin Linux' \
   --keys 'WORKSPACE_DIR' --defaults workspace_defaults --validate workspace_validate \
   --check workspace_status --apply workspace_configure --verify workspace_status
+
+workspace_command_configure() {
+  [[ $# == 0 ]] || return 2
+  run_workspace
+}
+register_command 'configure workspace' workspace_command_configure '' 9 'Configure Workspace'

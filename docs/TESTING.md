@@ -111,3 +111,7 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 5. 설치 중단과 복구, 초기화 후 개인 설정·저장소 목록 복원을 점검한다. 결과에는 OS, 선택 프로필, 성공·실패 단계만 남기고 인증 자료는 제외한다.
 
 T11에서는 Linux에서 Bash 5.2.37과 Apple 공개 소스를 Linux용으로 빌드한 Bash 3.2.57로 전체 검증을 실행했다. Intel iMac 기본 Bash와 실제 설치·외부 인증은 수동 확인 대상으로 남아 있다. 기존 시험의 추가 배경은 [테스트 리뷰 가이드](reviews/TEST_REVIEW_GUIDE.md)에 있다.
+
+## T18 및 Phase 5
+
+`test_registry_views.sh`는 임시 모듈의 ID·이름, 특수 명령 도움말, 0~11 고정 메뉴와 추가 번호를 확인한다. 조회·메뉴 종료 시 훅 호출이 없고 특수 명령의 빈 문자열·공백·글로브·옵션 인자와 종료 코드가 보존되는지 검사한다. Phase 5의 계획 오류·dry-run 무변경은 planner fixture, 전이 차단·독립 모듈 완료는 plan_runner fixture에서 확인한다. 기존 메뉴 재로딩·복구·옵션 오류와 SSH 공개키 안내는 전체 회귀에 포함한다.

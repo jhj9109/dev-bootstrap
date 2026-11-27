@@ -3,6 +3,7 @@ set -eu
 ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
 source "$ROOT_DIR/lib/logger.sh"
 register_module() { :; }
+register_command() { :; }
 source "$ROOT_DIR/modules/shell/module.sh"
 source "$ROOT_DIR/lib/shellenv.sh"
 tmp=$(mktemp -d)

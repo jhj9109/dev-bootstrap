@@ -112,10 +112,56 @@ register_module() {
   REGISTRY_VALIDATE+=("$validate")
 }
 
+registry_list() {
+  local i
+  for ((i=0; i<${#REGISTRY_IDS[@]}; i++)); do
+    printf '%s  %s\n' "${REGISTRY_IDS[i]}" "${REGISTRY_NAMES[i]}"
+  done
+}
+
+registry_command_usage() {
+  local i
+  for ((i=0; i<${#REGISTRY_COMMANDS[@]}; i++)); do
+    printf '  ./setup.sh %s%s\n' "${REGISTRY_COMMANDS[i]}" "${REGISTRY_COMMAND_ARGS[i]:+ ${REGISTRY_COMMAND_ARGS[i]}}"
+  done
+}
+
+registry_command_index() {
+  local i
+  for ((i=0; i<${#REGISTRY_COMMANDS[@]}; i++)); do
+    if [[ ${REGISTRY_COMMANDS[i]} == "$1" ]]; then printf '%d\n' "$i"; return 0; fi
+  done
+  return 1
+}
+
+register_command() {
+  local command=${1-} handler=${2-} slot=${4-}
+  if [[ ( $# != 3 && $# != 5 ) || ! $command =~ ^[a-z][a-z0-9_]*\ [a-z][a-z0-9_]*$ ||
+        ! $handler =~ ^${registry_directory}_[a-zA-Z0-9_]+$ ]] ||
+     ! declare -F "$handler" >/dev/null || registry_command_index "$command" >/dev/null; then
+    registry_error "Invalid or duplicate command: $command"; return 2
+  fi
+  case ${command%% *} in
+    list|help|all|plan|check|apply) registry_error "Reserved command: $command"; return 2 ;;
+  esac
+  if (( $# == 5 )); then
+    [[ $slot =~ ^[2-9]$ && -n $5 ]] || { registry_error 'Invalid legacy menu slot'; return 2; }
+    [[ ! ${REGISTRY_MENU_LABELS[slot]+set} ]] || { registry_error "Duplicate menu slot $slot"; return 2; }
+    REGISTRY_MENU_LABELS[slot]=$5
+    REGISTRY_MENU_HANDLERS[slot]=$handler
+    registry_has_menu=true
+  fi
+  REGISTRY_COMMANDS+=("$command")
+  REGISTRY_COMMAND_HANDLERS+=("$handler")
+  REGISTRY_COMMAND_ARGS+=("$3")
+}
+
 discover_modules() {
   local LC_ALL=C IFS=' '
   local root directory registry_directory registry_entry count dependency
-  local registry_invalid=0
+  local registry_invalid=0 registry_has_menu next_slot=12
+  REGISTRY_COMMANDS=() REGISTRY_COMMAND_HANDLERS=() REGISTRY_COMMAND_ARGS=()
+  REGISTRY_MENU_LABELS=() REGISTRY_MENU_HANDLERS=() REGISTRY_MENU_TARGETS=()
   local registry_claimed_keys=" ${REGISTRY_COMMON_KEYS[*]} "
   root=$(cd -P -- "$1" && pwd -P) || return 2
   REGISTRY_IDS=() REGISTRY_NAMES=() REGISTRY_PLATFORMS=() REGISTRY_DEPENDS=() REGISTRY_DEPENDS_IF=() REGISTRY_PREREQUISITES=()
@@ -130,9 +176,15 @@ discover_modules() {
       registry_error 'Unsafe module entry'; return 2
     fi
     count=${#REGISTRY_IDS[@]}
+    registry_has_menu=false
     source "$registry_entry" || { registry_error 'Module load failed'; return 2; }
     if (( registry_invalid || ${#REGISTRY_IDS[@]} != count + 1 )); then
       registry_error 'Expected one valid registration'; return 2
+    fi
+    if [[ $registry_has_menu == false ]]; then
+      REGISTRY_MENU_LABELS[next_slot]="Apply ${REGISTRY_IDS[count]} (${REGISTRY_NAMES[count]})"
+      REGISTRY_MENU_TARGETS[next_slot]=${REGISTRY_IDS[count]}
+      next_slot=$((next_slot+1))
     fi
   done
   for ((count=0; count<${#REGISTRY_IDS[@]}; count++)); do

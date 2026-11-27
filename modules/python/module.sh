@@ -70,3 +70,8 @@ register_module --id python --name Python --platforms 'Darwin Linux' \
   --keys 'PYTHON_VERSION PYTHON_INSTALL_METHOD' --defaults python_defaults --validate python_validate \
   --prerequisites 'uv bootstrap needs curl. A source build needs a full X.Y.Z version, curl, tar, make and a C toolchain.' \
   --check python_check --apply python_apply --verify python_check
+
+python_command_install() {
+  run_install python "$@"
+}
+register_command 'install python' python_command_install '[--version X.Y.Z] [--method uv|source]' 6 'Install Python'

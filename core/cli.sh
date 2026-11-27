@@ -1,25 +1,16 @@
 #!/usr/bin/env bash
 
 usage() {
-  cat <<'USAGE'
+  cat <<USAGE
 Dev Bootstrap v1.0 — Phase 4
 Usage:
   ./setup.sh                              Interactive menu
   ./setup.sh doctor                       Read-only environment check
-  ./setup.sh doctor github [--profile personal|secondary] [--method ssh|gh]
-  ./setup.sh configure git [--profile personal|secondary] [--global | --repo PATH]
-  ./setup.sh configure github [--profile personal|secondary] [--method ssh|gh] [--no-passphrase]
-  ./setup.sh install node [--version X.Y.Z]
-  ./setup.sh install python [--version X.Y.Z] [--method uv|source]
-  ./setup.sh install iterm
-  ./setup.sh configure shell
-  ./setup.sh configure workspace
-  ./setup.sh repo clone OWNER/REPO [--profile personal|secondary] [--method ssh|gh] [--dest ABS_PATH]
-  ./setup.sh repo remote OWNER/REPO --repo PATH [--name origin] [--profile personal|secondary] [--method ssh|gh]
   ./setup.sh plan [--profile personal|secondary] [--method ssh|gh] [--no-passphrase]
   ./setup.sh check [MODULE] [options]
   ./setup.sh apply [MODULE] [options]
   ./setup.sh all [--dry-run] [--profile personal|secondary] [--method ssh|gh] [--no-passphrase]
+  ./setup.sh list
   ./setup.sh help
 
 Select an environment for any command or the menu with --environment classroom|minimal.
@@ -27,6 +18,11 @@ Default GitHub method: ssh. Default Git identity scope: --global.
 --no-passphrase explicitly permits creating an unencrypted SSH private key.
 GitHub key registration is manual. The gh method requires a preinstalled gh CLI.
 Node uses nvm, Python uses uv by default; source builds require a full X.Y.Z version.
+
+$(registry_command_usage)
+
+Modules for check/apply:
+$(registry_list)
 USAGE
 }
 parse_options() {
@@ -206,37 +202,17 @@ main() {
   set -- ${command[@]+"${command[@]}"}
   load_config "$ROOT_DIR" "$requested_environment" || return $?
   local action="${1:-}" target="${2:-}"
+  local command_index
+  if (( $# >= 2 )) && command_index=$(registry_command_index "$1 $2"); then
+    shift 2
+    "${REGISTRY_COMMAND_HANDLERS[command_index]}" "$@"
+    return $?
+  fi
   case "$action" in
     '') [[ $# -eq 0 ]] || return 2; menu "$requested_environment" ;;
     help|-h|--help) usage ;;
-    doctor)
-      if [[ $# -eq 1 ]]; then doctor
-      elif [[ "$target" == github ]]; then shift 2; parse_options "$action" "$target" "$@" || return $?; github_doctor "$PROFILE" "$METHOD"
-      else usage; return 2; fi ;;
-    repo)
-      [[ $# -ge 3 ]] || { usage; return 2; }
-      local operation="$target" spec="$3" dest='' name='origin'
-      shift 3
-      PROFILE="$DEFAULT_GITHUB_PROFILE" METHOD="$DEFAULT_AUTH_METHOD" REPO=''
-      while (( $# )); do
-        case "$1" in
-          --profile|--method|--repo|--dest|--name)
-            local opt="$1"; shift
-            [[ $# -gt 0 && -n "$1" && "$1" != --* ]] || { log_error "Missing $opt value"; return 2; }
-            case "$opt" in
-              --profile) PROFILE="$1";; --method) METHOD="$1";; --repo) REPO="$1";; --dest) dest="$1";; --name) name="$1";;
-            esac ;;
-          *) log_error "Unknown repo option: $1"; return 2;;
-        esac
-        shift
-      done
-      case "$PROFILE" in personal|secondary) ;; *) return 2;; esac
-      case "$METHOD" in ssh|gh) ;; *) return 2;; esac
-      case "$operation" in
-        clone) [[ -z "$REPO" && "$name" == origin ]] || return 2; repo_clone "$spec" "$PROFILE" "$METHOD" "$dest" ;;
-        remote) [[ -n "$REPO" && -z "$dest" ]] || { log_error 'remote requires --repo PATH'; return 2; }; repo_remote "$REPO" "$spec" "$PROFILE" "$METHOD" "$name" ;;
-        *) log_error 'Unknown repo operation'; return 2;;
-      esac ;;
+    doctor) [[ $# -eq 1 ]] || return 2; doctor ;;
+    list) [[ $# -eq 1 ]] || return 2; registry_list ;;
     plan|all|check|apply)
       shift
       target=''
@@ -246,25 +222,6 @@ main() {
         shift
       fi
       run_request "$action" "$target" "$@" ;;
-    install)
-      [[ $# -ge 2 ]] || { usage; return 2; }
-      shift 2; run_install "$target" "$@" ;;
-    configure)
-      [[ $# -ge 2 ]] || { usage; return 2; }
-      if [[ "$target" == workspace ]]; then
-        [[ $# -eq 2 ]] || return 2
-        run_workspace; return $?
-      fi
-      if [[ "$target" == shell ]]; then
-        [[ $# -eq 2 ]] || { log_error 'Shell accepts no options'; return 2; }
-        shell_configure; return $?
-      fi
-      shift 2; parse_options "$action" "$target" "$@" || return $?
-      case "$target" in
-        git) [[ "$NO_PASSPHRASE" == false && "$METHOD" == "$DEFAULT_AUTH_METHOD" ]] || { log_error 'Unsupported Git option'; return 2; }; configure_git "$PROFILE" "$SCOPE" "$REPO" ;;
-        github) [[ "$SCOPE" == global && -z "$REPO" ]] || { log_error '--repo is not supported for GitHub auth'; return 2; }; configure_github "$PROFILE" "$METHOD" "$NO_PASSPHRASE" ;;
-        *) usage; return 2;;
-      esac ;;
     *) log_error "Unsupported command: $action"; usage; return 2 ;;
   esac
 }

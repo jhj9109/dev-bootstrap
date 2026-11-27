@@ -155,3 +155,9 @@ shell_apply() (
 register_module --id shell --name Shell --platforms 'Darwin Linux' \
   --prerequisites 'Publishing the loader needs zsh; managing fragment revisions uses Git.' \
   --check shell_check --apply shell_apply --verify shell_check
+
+shell_command_configure() {
+  [[ $# == 0 ]] || { log_error 'Shell accepts no options'; return 2; }
+  shell_configure
+}
+register_command 'configure shell' shell_command_configure '' 8 'Configure zsh'

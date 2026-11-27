@@ -19,3 +19,8 @@ iterm_status() {
 register_module --id iterm --name iTerm2 --platforms Darwin \
   --prerequisites 'Installing the app on Darwin needs curl and ditto.' \
   --check iterm_status --apply iterm_install --verify iterm_verify
+
+iterm_command_install() {
+  run_install iterm "$@"
+}
+register_command 'install iterm' iterm_command_install '' 7 'Install iTerm2'

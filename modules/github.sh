@@ -5,8 +5,7 @@ configure_github() {
   case "$github_method:$github_unencrypted" in ssh:true|ssh:false|gh:false) ;; *) return 2 ;; esac
   if runner_run github; then
     if [[ $github_method == ssh ]]; then
-      printf 'Register the public key %s in GitHub Settings > SSH and GPG keys.\n' "$HOME/.ssh/dev-bootstrap-$github_profile.pub"
-      printf 'Verify authentication with ./setup.sh doctor github --method ssh --profile %s\n' "$github_profile"
+      github_ssh_guidance "$github_profile"
     fi
     return 0
   fi
@@ -16,4 +15,9 @@ configure_github() {
 github_doctor() {
   profile_load "$1" || return $?
   case "$2" in ssh) ssh_doctor ;; gh) gh_doctor ;; *) return 2 ;; esac
+}
+
+github_ssh_guidance() {
+  printf 'Register the public key %s in GitHub Settings > SSH and GPG keys.\n' "$HOME/.ssh/dev-bootstrap-$1.pub"
+  printf 'Verify authentication with ./setup.sh doctor github --method ssh --profile %s\n' "$1"
 }

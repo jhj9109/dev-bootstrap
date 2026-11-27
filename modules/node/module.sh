@@ -57,3 +57,8 @@ register_module --id node --name Node.js --platforms 'Darwin Linux' \
   --keys 'NODE_VERSION' --defaults node_defaults --validate node_validate \
   --prerequisites 'Bootstrapping nvm needs curl and Bash.' \
   --check node_check --apply node_apply --verify node_check
+
+node_command_install() {
+  run_install node "$@"
+}
+register_command 'install node' node_command_install '[--version X.Y.Z]' 5 'Install Node.js'
