@@ -115,3 +115,23 @@ T11에서는 Linux에서 Bash 5.2.37과 Apple 공개 소스를 Linux용으로 �
 ## T18 및 Phase 5
 
 `test_registry_views.sh`는 임시 모듈의 ID·이름, 특수 명령 도움말, 0~11 고정 메뉴와 추가 번호를 확인한다. 조회·메뉴 종료 시 훅 호출이 없고 특수 명령의 빈 문자열·공백·글로브·옵션 인자와 종료 코드가 보존되는지 검사한다. Phase 5의 계획 오류·dry-run 무변경은 planner fixture, 전이 차단·독립 모듈 완료는 plan_runner fixture에서 확인한다. 기존 메뉴 재로딩·복구·옵션 오류와 SSH 공개키 안내는 전체 회귀에 포함한다.
+
+## T19 및 Phase 6 확장성 검증
+
+`bash tests/test_module_extension.sh`는 현재 작업 트리의 실행 파일과 공개 설정을 임시 디렉터리에 복사한다. 이 복제본에만 [모듈 작성 규약](MODULE_CONTRACT.md)에 따라 버전 파일을 관리하는 `sample`과 그 모듈에 의존하는 `sample_cache`를 추가한다. 복제본의 `minimal.conf`에 두 모듈과 기존 `workspace`를 순서대로 활성화한다. 별도의 임시 HOME에서 `bootstrap.sh`를 실행하고, 환경 이름 거부 검사 외에는 `--environment minimal`을 지정한다.
+
+| Phase 6 확인 항목 | 판정 근거 |
+|---|---|
+| 공통 파일 동일성 | 모듈 추가 전 보관한 두 진입점과 `core/`, `lib/` 전체를 복제본과 `diff -r`로 대조한다. fixture 작성 직후와 실패·재시도를 마친 뒤에도 파일 목록과 내용이 같아야 한다. |
+| 탐색과 조회 | list와 help에서 등록한 ID·표시 이름을 찾고, 메뉴에 표시된 번호를 읽어 실제로 선택한다. plan과 all --dry-run의 출력이 같고 세 모듈의 순서와 의존 관계가 정확해야 한다. 조회 중 예제 실행 훅 호출은 0회다. |
+| 목표 적용과 재실행 | 기본값 1에서 check는 코드 1과 CHANGE_NEEDED를 반환하며 HOME을 보존한다. 첫 apply는 check → apply → verify 순서와 실제 파일 내용으로 확인한다. 두 번째 apply에서는 check만 호출하고 SKIPPED를 반환하며 같은 파일·inode를 보존한다. 환경 목표를 2로 바꾼 뒤 메뉴로 재적용하고 check로 확인한다. |
+| 입력·실행 실패 | 숫자가 아닌 설정과 지원하지 않는 옵션은 코드 2로 거부하고 HOME을 보존한다. PATH의 모의 mv가 23을 반환하면 apply에서, 쓰기를 누락하고 0을 반환하면 verify에서 실패해야 한다. 두 경우 모두 CLI 코드 1, 원본 훅 코드, 직전 버전 보존 및 임시 파일 정리를 확인한다. |
+| 의존성과 복구 | 단일 apply는 미충족 선행을 읽기 전용으로 확인한다. 일괄 실행에서 버전 파일의 심볼릭 링크로 check가 실패하면 sample_cache의 훅은 호출되지 않고 BLOCKED가 되며, 뒤의 독립 workspace는 SUCCESS가 된다. 링크를 정리하고 다시 실행하면 버전 3과 캐시 디렉터리가 생성되고, 다음 일괄 실행은 세 모듈 모두 SKIPPED다. |
+
+### 확장 범위와 제약
+
+| 원인 | 새 모듈 작성자에게 미치는 영향 |
+|---|---|
+| 설정 로더의 `config_validate_environment`가 환경 이름을 `classroom`과 `minimal`로 제한한다. | 새 모듈과 설정 키는 기존 환경 파일에서 활성화할 수 있다. 같은 내용의 `extension.conf`를 추가해도 `--environment extension plan`은 코드 2로 종료한다. |
+| 범용 CLI의 `parse_options`는 `--version`을 Node와 Python에만 연결한다. | `--keys SAMPLE_VERSION` 등록은 설정 로딩과 검증을 확장한다. `apply sample --version 3`은 코드 2로 종료하므로 예제 모듈의 버전 목표는 환경 파일에서 지정한다. |
+| 모듈 규약의 verify는 Runner가 변경 후 호출하는 훅이다. | 사후 검증 결과는 apply 요약의 verify 단계에서 확인한다. 성공을 반환한 쓰기가 실제 목표를 반영하지 못하는 경우도 이 단계에서 검출한다. |
