@@ -53,6 +53,19 @@ if "$TMP/project/setup.sh" doctor github --profile personal >/dev/null 2>&1; the
 MOCK_SSH_STATUS=1
 MOCK_SSH_OUTPUT="Hi alice! You've successfully authenticated, but GitHub does not provide shell access.\nFAKE"
 if "$TMP/project/setup.sh" doctor github --profile personal >/dev/null 2>&1; then echo 'FAIL: unexpected output accepted'; exit 1; fi
-MOCK_SSH_OUTPUT="Hi mallory! You've successfully authenticated, but GitHub does not provide shell access."
-if "$TMP/project/setup.sh" doctor github --profile personal >/dev/null 2>&1; then echo 'FAIL: wrong user accepted'; exit 1; fi
+check_warning() {
+  local result status=0
+  result=$(MOCK_SSH_STATUS="$1" MOCK_SSH_OUTPUT="$2" "$TMP/project/setup.sh" doctor github --profile personal 2>&1) || status=$?
+  [[ $status == 4 && $result == *"$3"* && $result != *"$2"* && $result != *private-marker* ]] || {
+    echo "FAIL: expected doctor exit 4 and warning containing '$3'"; exit 1
+  }
+}
+check_warning 1 "Hi private-marker! You've successfully authenticated, but GitHub does not provide shell access." 'different account'
+check_warning 255 $'No ED25519 host key is known for github.com and you have requested strict checking.\nHost key verification failed.' 'No trusted GitHub host key'
+check_warning 255 $'@ WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED! @\nOffending key in private-marker' 'host key mismatch'
+check_warning 255 'git@github.com: Permission denied (publickey).' 'public key authentication failed'
+check_warning 255 'ssh: Could not resolve hostname github.com: private-marker' 'Check DNS'
+check_warning 255 'ssh: connect to host github.com port 22: Operation timed out' 'port 22'
+check_warning 255 'Host key verification failed.' 'did not confirm'
+check_warning 1 'git@github.com: Permission denied (publickey).' 'did not confirm'
 echo 'PASS: atomic config reload and strict SSH doctor responses'

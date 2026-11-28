@@ -327,11 +327,28 @@ ssh_doctor() {
   esac
   # Use only the selected identity; ignore proxy commands, multiplexers and
   # other user-configured side effects. Unknown host keys require manual review.
-  output=$(ssh -T -F /dev/null -i "$PROFILE_KEY" -o IdentitiesOnly=yes -o BatchMode=yes \
+  output=$(LC_ALL=C ssh -T -F /dev/null -i "$PROFILE_KEY" -o IdentitiesOnly=yes -o BatchMode=yes \
     -o PreferredAuthentications=publickey -o StrictHostKeyChecking=yes -o UpdateHostKeys=no -o AddKeysToAgent=no \
     -o ConnectTimeout=8 git@github.com 2>&1) || rc=$?
   if [[ $rc == 1 && $output == "Hi $PROFILE_USER! You've successfully authenticated, but GitHub does not provide shell access." ]]; then
     log_ok "GitHub authenticated as $PROFILE_USER"; return 0
   fi
-  log_warn "GitHub SSH authentication did not confirm $PROFILE_USER (exit $rc)"; return 4
+  local greeting="^Hi [A-Za-z0-9-]+! You've successfully authenticated, but GitHub does not provide shell access[.]$"
+  local message="GitHub SSH authentication did not confirm $PROFILE_USER (exit $rc)"
+  if [[ $rc == 1 && $output =~ $greeting ]]; then
+    message='GitHub authenticated a different account. Check the profile username and the account that owns its public key.'
+  elif [[ $rc == 255 ]]; then
+    case "$output" in
+      *'WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!'*)
+        message='GitHub host key mismatch. Stop and verify the change against official GitHub fingerprints before reviewing known_hosts.' ;;
+      'No '*' host key is known for github.com and you have requested strict checking.'$'\nHost key verification failed.')
+        message='No trusted GitHub host key found. Compare the host fingerprint with GitHub documentation before accepting it interactively.' ;;
+      'git@github.com: Permission denied (publickey).')
+        message='GitHub public key authentication failed. Check public key registration on the intended account and unlock the profile key in your SSH agent.' ;;
+      'ssh: Could not resolve hostname github.com: '*|'ssh: connect to host github.com port 22: Connection timed out'|'ssh: connect to host github.com port 22: Operation timed out'|'ssh: connect to host github.com port 22: Connection refused'|'ssh: connect to host github.com port 22: Network is unreachable')
+        message='Cannot reach GitHub over SSH. Check DNS, network connectivity and access to port 22.' ;;
+    esac
+  fi
+  log_warn "$message"
+  return 4
 }

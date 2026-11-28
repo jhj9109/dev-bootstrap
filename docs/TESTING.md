@@ -258,3 +258,9 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 기준 `1f019a5`, Intel macOS 15.7.5, gh 2.106.0. 사용자가 동일한 격리 설정으로 브라우저 로그인 0, personal 계정 일치, gh apply 0 SUCCESS와 doctor 0을 확인했다. 검증 세션에서도 같은 실행기로 doctor 0, check와 재apply 모두 0 SKIPPED였다. 테스트 Git 파일의 github.com helper가 빈 초기화 항목 다음에 gh auth git-credential을 호출하는지 확인했다.
 
 인증된 API로 승인 저장소가 비공개임을 확인했다. 별도 Documents Workspace에서 gh 토큰 환경 변수를 해제하고 Git을 비대화형·HTTPS 전용으로 제한했다. repository check 1 CHANGE_NEEDED → apply 0 SUCCESS → check·재apply 모두 0 SKIPPED였다. HTTPS origin이 승인 대상과 일치했고 재실행 뒤 HEAD가 같고 작업 트리가 깨끗했다. 임시 복제본 정리 후 기존 personal SSH doctor 0, 원래 Git helper와 사용자 파일 비교 기준 일치를 확인했다. 테스트 gh 설정과 Git 설정을 유지했고 키체인의 자격 증명은 열람·삭제하지 않았다. 키체인 자체는 설정 파일 격리 범위 밖이다.
+
+### SSH doctor 실패 진단 회귀
+
+`tests/test_config_atomic_and_ssh_doctor.sh`는 임시 HOME의 모의 SSH로 T21 최초 접속 사례(미등록 키, 종료 255)를 재현한다. 호스트 키 변경 경고, 공개키 거부, 다른 계정의 정상 인사(종료 1), DNS 실패와 연결 시간 초과도 검사한다. 각 실패에서 doctor는 4를 반환하고 해당 조치를 출력하며 SSH 응답 원문을 숨긴다. 원인이 없는 호스트 키 검증 실패와 출력·종료 코드가 맞지 않는 공개키 오류는 일반 경고로 처리한다.
+
+Intel macOS 15.7.5에서 작업 트리의 로컬 accounts.conf가 fixture 계정에 영향을 주어 첫 매트릭스가 실패했다. 기준 `67cca09`의 깨끗한 복제본에 변경을 적용하고 `BASH5_BIN=/private/tmp/t21-build/bash-5.3/bash BASH32_BIN=/bin/bash ./scripts/verify-matrix.sh`를 실행해 양쪽 모두 문법 검사 61개·회귀 스크립트 28개 통과를 확인했다. OrbStack 공존은 fixture로 검사했다. 교육장 실기기 검증과 초기화 후 복원은 대기 중이다.

@@ -104,6 +104,12 @@ GITHUB_SECONDARY_EMAIL="other-email@example.com"
 
 `doctor github --method ssh`와 메뉴 4번은 별도 인증 검사입니다. 별칭과 로컬 키를 확인한 뒤 해당 키로 github.com에 접속해 GitHub가 반환한 계정을 비교합니다. 신뢰가 확인된 GitHub 호스트 키가 필요합니다. doctor는 호스트 키를 추가하거나 갱신하지 않습니다.
 
+personal 프로필을 처음 인증할 때는 다음 순서로 진행하세요. secondary를 사용하면 명령과 파일명의 personal을 secondary로 바꾸세요.
+
+1. 대상 GitHub 계정의 Settings → SSH and GPG keys에 `~/.ssh/dev-bootstrap-personal.pub`의 공개키를 등록합니다. 개인키에 암호가 있으면 현재 터미널의 SSH agent에 `ssh-add ~/.ssh/dev-bootstrap-personal`로 키를 등록합니다.
+2. 호스트 키가 미등록이면 일반 터미널에서 `ssh -T -F /dev/null -o StrictHostKeyChecking=ask -o UpdateHostKeys=no -o IdentitiesOnly=yes -i ~/.ssh/dev-bootstrap-personal git@github.com`을 실행합니다. 표시된 알고리즘과 SHA256 지문이 GitHub 공식 목록의 같은 알고리즘 항목과 일치할 때만 승인합니다. 지문이 다르거나 기존 키 변경 경고가 나오면 접속을 중단하고 관리자와 변경 사유를 확인하세요. [GitHub 공식 SSH 호스트 키 지문](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints)
+3. 같은 터미널에서 `./setup.sh doctor github --profile personal --method ssh`를 실행해 대상 계정 인증을 확인합니다.
+
 원격 URL 예시: `git@github-personal:OWNER/REPO.git`.
 
 기본적으로 키 암호(passphrase)를 대화형으로 입력합니다. `--no-passphrase`는 의도적으로 암호화하지 않은 키를 만들기 때문에 권장하지 않습니다. 주기적으로 GitHub 계정에서 오래된 공개키를 정리하세요.
