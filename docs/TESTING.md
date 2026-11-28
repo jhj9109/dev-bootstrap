@@ -246,3 +246,9 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 기준 `2912795`, Intel macOS 15.7.5. personal SSH check와 원격 doctor는 0이었다. gh 미설치 시 check는 1 BLOCKED(훅 3)였다. 승인 후 공식 Intel macOS 배포 zip의 SHA-256을 배포 체크섬과 대조하고 gh 2.106.0을 사용자 .local/bin에 설치했다. sudo는 사용하지 않았다.
 
 기존 Git 설정을 include하는 별도 전역 설정 파일과 전용 GH_CONFIG_DIR에서 토큰 환경 변수 없이 실행했다. 대화형 gh check는 1 CHANGE_NEEDED, 로그인 전 doctor는 4, 비대화형 apply는 1 NEEDS_ACTION(훅 4)이었다. SSH 파일·기존 Git 설정과 유효 helper·셸 설정·프로젝트 설정은 설치 전과 비교해 동일했다. 다음은 사용자 터미널에서 personal 계정으로 대화형 apply, doctor, check·재apply 검증이다. HTTPS 복원과 이후 기존 SSH 경로 대조, 교육장 OS 재검증과 초기화 후 복원은 대기다.
+
+### T21 gh 대화형 apply 이후 대조
+
+기준 `0d0a485`. 사용자는 일반 터미널에서 personal gh apply 종료 0을 보고했다. 검증 세션에서는 이전 실행기와 동일한 GH_CONFIG_DIR·GIT_CONFIG_GLOBAL을 재사용하고 토큰 환경 변수를 제외했다. 격리 경로에 hosts.yml·config.yml이 없었고 격리 Git 파일에서 github.com helper 조회는 1이었다. gh API는 로그인을 요구했고 doctor는 4, check와 비대화형 재apply는 각각 1 NEEDS_ACTION(훅 4)이었다. 사용자 터미널과 결과가 다른 이유는 미확정이다.
+
+승인된 저장소의 익명 GitHub API 조회는 HTTP 404였다. 같은 저장소를 Documents 아래 별도 임시 Workspace에서 기존 personal SSH로 복원해 apply 0 SUCCESS, 재apply 0 SKIPPED, 기대한 SSH origin 일치를 확인했다. SSH 원격 doctor는 0이었고 복원 후에도 기존 사용자 파일·유효 helper가 로그인 전 비교 기준과 일치했다. 키체인 내용은 조회하지 않았다. gh 인증이 보이는 세션에서 doctor·helper·인증된 HTTPS 복원·재실행 검증을 이어간다.

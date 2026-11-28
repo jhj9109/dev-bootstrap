@@ -39,6 +39,7 @@
 | T21 classroom 전체 | 기준 `628f13a`, 로컬 Intel macOS 15.7.5. 실제 HOME·별도 목록 1건으로 전체 check 1(repository만 변경 필요) → all 0(SSH 복원 성공) → check·all·check 모두 0(8개 SKIPPED). 매 단계 사용자 설정·SSH 키·모드와 작업 저장소 origin 보존, 복원 이후 복제본 전체 파일 일치 확인. Python Source·gh 인증·설치 중단 복구의 후속 조건은 TESTING에 기록했다. |
 | T21 Python Source 중단 복구 | 기준 `02aadaf`, Intel macOS 15.7.5. CPython 3.12.10 컴파일 중 전용 make 중단 → apply 1, staging·잠금·부분 prefix 잔여 없음. 동일 요청 재설치 0 SUCCESS, 지정 인터프리터·표준 라이브러리 실행, 재실행 0 SKIPPED 및 prefix 보존. 각 단계 기존 uv Python 3.12.16과 사용자 파일 비교 통과. |
 | T21 gh 준비 | Intel macOS 15.7.5에서 gh 2.106.0 사용자 설치 및 체크섬 확인. 기존 SSH doctor 0. 격리된 gh·Git 설정으로 로그인 전 TTY check 1, doctor 4. personal 대화형 로그인과 인증 후 helper·HTTPS 복원·SSH 재검증 대기. |
+| T21 gh 로그인 후 대조 | 일반 터미널 apply 0(사용자 보고). 동일 격리 경로에서 검증 세션은 로그인 정보와 github.com helper를 확인할 수 없어 doctor 4·check/재apply 1. 기존 SSH doctor 0, 승인 저장소 SSH 복원 0·재실행 SKIPPED, 사용자 파일·helper 기준 일치. 인증된 HTTPS 복원은 대기다. |
 | 추가 환경 관찰 | 이 환경에서 직접 빌드한 Bash 5.2.0·5.2.37은 계정 설정 테스트에서 SIGSEGV로 중단됐다. 5.2.37은 기준 커밋에서도 동일하게 재현됐다. |
 | 미검증 및 알려진 제약 | 교육장 macOS 26.5.2·OpenSSH 10.2p1의 OrbStack 공존과 현장 설치·인증, 초기화 후 복원은 재검증 대기다. 다운로드 파일별 독립적인 무결성 검증이 제한적이다. |
 | 검토할 결정 | 편집된 env.zsh의 수동 이관 |
