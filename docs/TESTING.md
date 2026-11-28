@@ -204,3 +204,25 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 | repository | 1 CHANGE_NEEDED | 0 SUCCESS | 모두 0 SKIPPED | 승인된 테스트 저장소를 personal SSH로 복원, 복제 HEAD 44c15d5 확인 |
 
 각 행은 `./setup.sh check MODULE`, `apply MODULE`, `check MODULE`, `apply MODULE` 순서다. 저장소 검사는 현재 작업 저장소를 대상으로 별도 목록과 빈 Workspace를 사용했다. 첫 시도는 HOME 밖 임시 경로여서 workspace 훅이 2를 반환하고 clone 전에 차단됐다. Documents 아래 전용 임시 경로에서 기존 known_hosts와 agent를 사용해 strict host key checking으로 복원한 후 임시 복제본을 정리했다. 영구 복원 목록은 편집하지 않았다. 교육장 OS·OpenSSH 조합과 OrbStack 공존, 설치 중단 후 재시도 및 초기화 후 복원 등 남은 T21 항목은 대기다.
+
+### T21 classroom 전체 실행과 파일 보존
+
+2026-11-28, 기준 `628f13a`, 로컬 Intel macOS 15.7.5. 실제 HOME과 personal 계정 설정을 사용했다. 기준 커밋의 별도 실행 복사본에 테스트 목록 한 줄(`jhj9109/dev-bootstrap`)과 Documents 아래 빈 임시 Workspace를 지정했다. 기존 작업 저장소와 개인 복원 목록은 그대로 두고 기존 SSH agent와 known_hosts로 복원했다.
+
+| 순서 | 명령 (공통 옵션 `--environment classroom --profile personal --method ssh`) | 종료 코드와 결과 |
+|---|---|---|
+| 1 | `./setup.sh check` | 1. repository만 CHANGE_NEEDED, 나머지 7개 SKIPPED |
+| 2 | `./setup.sh all` | 0. repository 복원 SUCCESS, 나머지 7개 SKIPPED |
+| 3 | `./setup.sh check` | 0. 8개 모두 SKIPPED |
+| 4 | `./setup.sh all` | 0. 8개 모두 SKIPPED |
+| 5 | `./setup.sh check` | 0. 8개 모두 SKIPPED |
+
+각 명령 직후 실행 전 상태와 대조했다. 대상은 .ssh 전체(개인키·공개키·known_hosts 포함), Git 사용자 설정, .zshrc·.zprofile·.zlogin·.zshenv, 관리 셸 설정 디렉터리, nvm 기본 별칭, OrbStack SSH 설정 경로, 원본·실행 복사본의 config 및 원본 .git/config였다. 경로 존재 여부·종류·모드·소유자·그룹, 링크 대상과 일반 파일 내용(SHA-256)을 메모리에서 비교해 차이 0건을 확인했다. 작업 저장소의 fetch/push origin·HEAD·작업 트리 상태도 동일했다. 복원 직후 깨끗한 복제본을 기준으로 이후 세 명령마다 .git 포함 전체 파일과 origin·HEAD·작업 트리 상태가 일치했다. 비교값과 인증 원문은 저장하지 않았다. 임시 Workspace는 검사 후 정리했다.
+
+후속 검증 조건은 다음과 같다.
+
+- Python Source는 정확한 X.Y.Z 버전, 승인된 다운로드와 빌드 시간·공간, Xcode CLI·make·tar 및 충돌 없는 사용자 prefix를 준비한다. 설치 후 해당 prefix의 인터프리터로 버전과 표준 라이브러리를 확인하고 같은 요청을 반복한다.
+- gh 인증은 gh가 설치된 승인된 전용 계정과 대화형 로그인 수단이 필요하다. 기존 Git credential helper를 전후 비교하고 gh 방식의 check·apply·doctor와 재실행을 확인한다.
+- 설치 중단 복구는 중단 지점과 대상을 미리 정한 전용 계정 또는 격리된 설치 경로에서 수행한다. 중단 전 사용자 파일을 비교 기준으로 확보하고, 중단 후 staging·잠금·부분 설치 상태를 확인한 뒤 같은 명령 재시도와 SKIPPED를 검증한다.
+
+위 세 항목과 교육장 macOS 26.5.2·OpenSSH 10.2p1 및 초기화 후 복원은 미실행이다.
