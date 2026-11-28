@@ -226,3 +226,17 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 - 설치 중단 복구는 중단 지점과 대상을 미리 정한 전용 계정 또는 격리된 설치 경로에서 수행한다. 중단 전 사용자 파일을 비교 기준으로 확보하고, 중단 후 staging·잠금·부분 설치 상태를 확인한 뒤 같은 명령 재시도와 SKIPPED를 검증한다.
 
 위 세 항목과 교육장 macOS 26.5.2·OpenSSH 10.2p1 및 초기화 후 복원은 미실행이다.
+
+### T21 Python Source 컴파일 중단과 동일 명령 재시도
+
+2026-11-28, 기준 `02aadaf`, Intel macOS 15.7.5. Xcode CLI의 clang, 시스템 make·tar·curl, 여유 공간 415 GiB를 확인했다. 승인된 대상은 CPython 3.12.10과 별도 prefix `~/.local/python-3.12.10`이었다. 시작 전 해당 경로에 파일·링크가 없었고 Source check는 1 CHANGE_NEEDED, 기존 uv 3.12 check는 0 SKIPPED였다.
+
+세 번 모두 `./setup.sh apply python --environment classroom --method source --version 3.12.10`을 실행했다.
+
+| 실행 | 종료 코드 | 검증 결과 |
+|---|---|---|
+| 첫 빌드 | 1 | 공식 소스 다운로드·configure 후 C 컴파일 진행을 확인하고, 이번 실행 전용 프로세스 그룹의 병렬 make 한 개에만 SIGTERM을 전달했다. 종료 후 .local 직속 항목 집합이 시작 전과 같았다. 빌드 디렉터리·내부 staging·새 잠금·최종 prefix가 남지 않았다. |
+| 같은 명령 재시도 | 0 SUCCESS | 새로 다운로드·빌드·설치했다. .local에 추가된 항목은 승인된 prefix 하나였다. 그 안의 bin/python3.12를 직접 실행해 sys.prefix와 정확한 버전 3.12.10을 확인하고 표준 라이브러리 json으로 값을 파싱했다. |
+| 같은 명령 재실행 | 0 SKIPPED | 설치 트리 전체 파일 내용·권한·소유권·링크가 재실행 직전과 일치했다. 최종 Source 및 uv check도 각각 0 SKIPPED였다. |
+
+다운로드 전 실제 uv 관리 인터프리터 경로·실행 버전과 사용자 파일을 비교 기준으로 확보했다. 중단·재설치·재실행 직후마다 uv 관리 Python 3.12.16을 직접 실행했고, 관리 설치 트리·.local/bin·SSH·Git·zsh·관리 셸 설정·프로젝트 config와 .git/config의 경로, 일반 파일 내용(SHA-256), 모드, 소유자·그룹, 링크 대상이 기준과 일치했다. 비교값과 파일 원문은 기록하지 않았다. 중단 지점은 최종 prefix 게시 전의 컴파일 단계였다.

@@ -37,6 +37,7 @@
 | T21 실제 적용 중간 결과 | 기준 `12549ae`. personal 설정 유효. Git·Shell 각각 실제 HOME에서 check 1 → apply 0 → check 0(SKIPPED). GitHub SSH는 사용자 터미널의 키 생성 대기. 이후 런타임·앱 적용, 새 zsh와 원격 인증 검증 대기. |
 | T21 로컬 실제 적용 | 기준 `0904424`. 사용자 확인으로 personal SSH 원격 인증 성공(최초 호스트 키 미등록 255 해결), 로컬 check 0. Node·Python(uv)·iTerm2·테스트 저장소 SSH 복원 각각 적용 전 1 → apply 0 → check·재apply 0 SKIPPED. 새 zsh 런타임 실행과 iTerm2 프로세스 확인. 후속 후보는 최초 호스트 키 확인 안내와 인증 실패 원인별 진단이다. |
 | T21 classroom 전체 | 기준 `628f13a`, 로컬 Intel macOS 15.7.5. 실제 HOME·별도 목록 1건으로 전체 check 1(repository만 변경 필요) → all 0(SSH 복원 성공) → check·all·check 모두 0(8개 SKIPPED). 매 단계 사용자 설정·SSH 키·모드와 작업 저장소 origin 보존, 복원 이후 복제본 전체 파일 일치 확인. Python Source·gh 인증·설치 중단 복구의 후속 조건은 TESTING에 기록했다. |
+| T21 Python Source 중단 복구 | 기준 `02aadaf`, Intel macOS 15.7.5. CPython 3.12.10 컴파일 중 전용 make 중단 → apply 1, staging·잠금·부분 prefix 잔여 없음. 동일 요청 재설치 0 SUCCESS, 지정 인터프리터·표준 라이브러리 실행, 재실행 0 SKIPPED 및 prefix 보존. 각 단계 기존 uv Python 3.12.16과 사용자 파일 비교 통과. |
 | 추가 환경 관찰 | 이 환경에서 직접 빌드한 Bash 5.2.0·5.2.37은 계정 설정 테스트에서 SIGSEGV로 중단됐다. 5.2.37은 기준 커밋에서도 동일하게 재현됐다. |
 | 미검증 및 알려진 제약 | 교육장 macOS 26.5.2·OpenSSH 10.2p1의 OrbStack 공존과 현장 설치·인증, 초기화 후 복원은 재검증 대기다. 다운로드 파일별 독립적인 무결성 검증이 제한적이다. |
 | 검토할 결정 | 편집된 env.zsh의 수동 이관 |
