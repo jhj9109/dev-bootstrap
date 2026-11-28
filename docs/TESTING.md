@@ -179,3 +179,15 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 | 같은 check의 shell·node·python·iterm | 각각 1. Shell과 iTerm2는 CHANGE_NEEDED. Node와 Python은 Shell 선행 조건으로 BLOCKED여서 자체 훅은 실행되지 않았다. 기본 nvm.sh·사용자 uv 실행 파일이 없었고 PATH에 gh도 없었다. |
 
 승인된 테스트 계정에서 personal 사용자명·커밋 이메일을 로컬 계정 설정에 준비하고 Git·GitHub check를 다시 실행한다. HOME 변경 승인 후 Git 작성자·Shell·SSH 설정을 적용하고 check를 반복한다. 다운로드 승인 후 classroom 목표인 Node 24(nvm), Python 3.12(uv), iTerm2를 적용하고 새 zsh에서 버전과 앱 실행을 확인한다. SSH는 호스트 키를 확인하고 공개키 등록·원격 인증 승인 후 doctor github를 실행한다. 테스트 저장소 목록과 접근 권한이 준비되면 복원과 재실행을 확인한다. gh 방식은 별도 설치·인증 검증이 필요하다. 현재 표준 OrbStack 설정 경로에는 파일이 없어 교육장 설정과의 공존은 미검증이다. 교육장 26.5.2·OpenSSH 10.2p1 재검증, 설치 중단 후 재시도와 초기화 후 복원은 대기다.
+
+### T21 실제 적용 중간 결과
+
+기준 `12549ae`, 로컬 Intel macOS 15.7.5의 classroom·personal. Git과 GitHub의 로컬 검사가 personal 설정을 수락했다. 실제 HOME 적용 승인 후 아래 순서로 확인했다.
+
+| 모듈 | 적용 전 check | apply | 적용 후 check |
+|---|---|---|---|
+| git | 1 CHANGE_NEEDED | 0 SUCCESS | 0 SKIPPED |
+| shell | 1 CHANGE_NEEDED | 0 SUCCESS | 0 SKIPPED |
+| github (ssh) | 비대화형 1 NEEDS_ACTION(훅 4), TTY 1 CHANGE_NEEDED | 전용 키 생성 시 사용자의 터미널 패스프레이즈 입력 대기 | 미실행 |
+
+사용자가 로컬 터미널에서 `./setup.sh apply github --environment classroom --profile personal`을 실행해 패스프레이즈를 직접 입력한 뒤 로컬 check를 반복한다. 공개키 등록과 원격 인증은 별도 단계다. Node·Python(uv)·iTerm2 적용 및 새 zsh 실행 검사는 대기다. 사용자 파일 전후의 독립적인 내용 대조는 미실행이다.

@@ -34,6 +34,7 @@
 | T21 개인키 지문 | 교육장 iMac의 a672b21에서 OpenSSH 10.2p1은 개인키 경로 검사에 성공했으나 /dev/stdin 경유 시 255로 실패해 OrbStack 테스트의 GitHub apply가 중단됐다. 보호된 임시 디렉터리의 링크로 개인키 자체를 검사하도록 수정했다. Intel macOS 15.7.5, OpenSSH 9.9p2에서 전체 매트릭스 Bash 5.3.0·3.2.57 각각 문법 61개·회귀 28개 통과. 교육장 26.5.2 수정본은 재검증 대기다. |
 | T21 수정본 재검증 | `0854da5`, iMac20,1(x86_64), macOS 15.7.5(24G624), OpenSSH 9.9p2. 기본 Bash 3.2.57에서 지문·OrbStack 단독 검사 통과 후 전체 verify.sh 문법 61개·회귀 28개 통과. 교육장 macOS 26.5.2·OpenSSH 10.2p1 재검증은 대기다. |
 | T21 로컬 상태 점검 | 2026-11-28, `dd062dc`, Intel macOS 15.7.5. doctor 0(경고 2), minimal·classroom plan과 dry-run 일치. Workspace 충족, 저장소 목록 비어 있음. Git·GitHub는 personal 설정 누락, Shell·iTerm2는 변경 필요, Node·Python은 Shell 선행 조건으로 차단. 다음은 전용 계정 설정과 승인 후 적용·인증이다. [검사별 결과](docs/TESTING.md#2026-11-28-로컬-읽기-전용-점검) |
+| T21 실제 적용 중간 결과 | 기준 `12549ae`. personal 설정 유효. Git·Shell 각각 실제 HOME에서 check 1 → apply 0 → check 0(SKIPPED). GitHub SSH는 사용자 터미널의 키 생성 대기. 이후 런타임·앱 적용, 새 zsh와 원격 인증 검증 대기. |
 | 추가 환경 관찰 | 이 환경에서 직접 빌드한 Bash 5.2.0·5.2.37은 계정 설정 테스트에서 SIGSEGV로 중단됐다. 5.2.37은 기준 커밋에서도 동일하게 재현됐다. |
 | 미검증 및 알려진 제약 | 수정본의 OrbStack 공존, 실제 설치 및 외부 인증은 iMac 재검증 대기다. 다운로드 파일별 독립적인 무결성 검증이 제한적이다. |
 | 검토할 결정 | 편집된 env.zsh의 수동 이관 |
