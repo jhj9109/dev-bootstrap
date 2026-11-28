@@ -1,5 +1,19 @@
 # 회귀 검증과 실기기 확인
 
+## 테스트 프로젝트와 개인 설정 격리
+
+CLI나 프로젝트 설정을 읽는 테스트는 새 임시 디렉터리에서 `bash "$root/tests/copy-project.sh" "$root" "$project"`로 실행용 프로젝트를 준비한다. 복사 대상은 현재 작업 트리의 두 진입점, `core/`, `lib/`, `modules/`, 공유 설정인 `config/defaults.conf`, `config/environments/`, `config/*.conf.example`이다. 테스트에서 사용할 `profiles.conf`, `accounts.conf`, `repositories.conf`는 필요한 경우에만 복사본에 작성한다. 각 테스트는 임시 HOME을 사용한다.
+
+`scripts/verify.sh`는 작업 트리에서 추적 중인 셸 파일과 Git이 무시하지 않는 미추적 셸 파일을 찾아 문법을 검사하고, 그중 `tests/` 아래의 `test_*.sh`를 실행한다. 새 테스트나 변경된 모듈을 검증하기 위해 먼저 커밋할 필요가 없다. 개별 테스트도 기존처럼 `bash tests/test_config_atomic_and_ssh_doctor.sh`로 실행할 수 있다.
+
+`tests/test_project_isolation.sh`는 임시 원본에 로드 즉시 실패하는 두 계정 설정과 잘못된 복원 목록을 둔다. 세 파일이 복사 대상에서 빠지고 원본 내용이 보존되는지, 수정된 라이브러리와 새 모듈이 복사되는지 확인한다.
+
+Intel macOS 15.7.5에서 기준 `e027581`에 미커밋 변경과 미추적 테스트를 포함해 아래 명령을 실행했다. 실제 작업 트리, 개인 설정이 없는 임시 작업 트리, 모의 개인 설정 세 파일을 추가한 임시 작업 트리 모두 Bash 5.3.0·3.2.57 각각 문법 검사 63개와 회귀 스크립트 29개가 통과했다. 모의 개인 설정 세 파일의 SHA-256은 전체 검증 전후에 일치했다.
+
+```bash
+BASH5_BIN=/private/tmp/t21-build/bash-5.3/bash BASH32_BIN=/bin/bash ./scripts/verify-matrix.sh
+```
+
 ## Phase 0 기준 결과
 
 2026-11-24, 리비전 `44c15d5`, Linux x86_64, Bash 5.2.37, Git 2.56.1에서 기준 검사를 실행했다. 셸 파일별 문법 검사와 7개 테스트 스크립트가 모두 종료 코드 0으로 끝났다. 각 스크립트가 PASS에 도달했다. 표의 단위는 테스트 스크립트다.

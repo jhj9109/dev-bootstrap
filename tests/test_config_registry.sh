@@ -6,7 +6,7 @@ trap 'rm -rf "$tmp"' EXIT
 project="$tmp/project"
 export HOME="$tmp/home"
 mkdir -p "$HOME" "$project"
-cp -R "$root"/{setup.sh,bootstrap.sh,lib,core,modules,config} "$project/"
+bash "$root/tests/copy-project.sh" "$root" "$project"
 mkdir "$project/modules/sample"
 cat > "$project/modules/sample/module.sh" <<'MODULE'
 sample_defaults() {

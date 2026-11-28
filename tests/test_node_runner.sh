@@ -3,6 +3,8 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
+bash "$root/tests/copy-project.sh" "$root" "$tmp/project"
+root="$tmp/project"
 export HOME="$tmp/home" TEST_STATE="$tmp/state" TEST_BIN="$tmp/bin"
 mkdir -p "$HOME" "$TEST_STATE" "$TEST_BIN"
 export PATH="$TEST_BIN:$PATH"

@@ -6,7 +6,7 @@ trap 'rm -rf "$tmp"' EXIT
 project="$tmp/project"
 export HOME="$tmp/home space" TRACE="$tmp/calls"
 mkdir -p "$project" "$HOME/.config/dev-bootstrap/env.d" "$HOME/.ssh" "$tmp/bin"
-cp -R "$root"/{setup.sh,bootstrap.sh,lib,core,modules,config} "$project/"
+bash "$root/tests/copy-project.sh" "$root" "$project"
 envfile="$project/config/environments/minimal.conf"
 # Seed a managed loader and an active fragment to exercise the old all fallback.
 cp "$root/modules/shell/loader.zsh" "$HOME/.config/dev-bootstrap/env.zsh"

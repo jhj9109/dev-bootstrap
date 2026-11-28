@@ -5,7 +5,7 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 export HOME="$tmp/home"
 mkdir "$HOME" "$tmp/project"
-cp -R "$root"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$tmp/project/"
+bash "$root/tests/copy-project.sh" "$root" "$tmp/project"
 project="$tmp/project"
 source "$project/lib/logger.sh"
 source "$project/modules/workspace.sh"

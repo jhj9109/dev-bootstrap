@@ -7,13 +7,8 @@ trap 'rm -rf "$tmp"' EXIT
 project="$tmp/project"
 export HOME="$tmp/home space"
 mkdir "$HOME" "$project" "$tmp/before"
-# Exercise the current checkout, including pending code changes, without loading
-# a developer's private profiles, accounts or repository manifest.
+bash "$root/tests/copy-project.sh" "$root" "$project"
 cp -R "$root"/{setup.sh,bootstrap.sh,core,lib} "$tmp/before/"
-cp -R "$tmp/before/." "$project/"
-cp -R "$root/modules" "$project/"
-mkdir "$project/config"
-cp -R "$root/config"/{defaults.conf,environments} "$project/config/"
 
 common_unchanged() {
   local path

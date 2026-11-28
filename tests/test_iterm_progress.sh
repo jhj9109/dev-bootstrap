@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$TMP/bin" "$TMP/home" "$TMP/project" "$TMP/system"
-cp -R "$ROOT"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$TMP/project/"
+bash "$ROOT/tests/copy-project.sh" "$ROOT" "$TMP/project"
 project="$TMP/project"
 # Isolate the read-only system installation probe even on a Mac with iTerm2.
 cat >> "$project/modules/iterm.sh" <<'FIXTURE'

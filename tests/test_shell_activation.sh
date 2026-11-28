@@ -3,7 +3,7 @@ set -eu
 root=$(cd "$(dirname "$0")/.." && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
-cp -R "$root"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$tmp/"
+bash "$root/tests/copy-project.sh" "$root" "$tmp"
 cli="$tmp/bootstrap.sh"
 export HOME="$tmp/home space"
 dir="$HOME/.config/dev-bootstrap"

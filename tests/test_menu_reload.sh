@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 test_menu_reload() (
   TMP="$(mktemp -d)"
   trap '[[ -n "${pid:-}" ]] && kill "$pid" 2>/dev/null || :; rm -rf "$TMP"' EXIT
-  cp -R "$ROOT" "$TMP/project"
+  bash "$ROOT/tests/copy-project.sh" "$ROOT" "$TMP/project"
   mkdir -p "$TMP/home"
   cat > "$TMP/project/config/$2" <<'CONF'
 GITHUB_PERSONAL_USER="first-user"

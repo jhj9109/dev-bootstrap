@@ -7,7 +7,7 @@ export HOME="$tmp/home" GIT_CONFIG_NOSYSTEM=1 PATH="$root/tests/fixtures/github:
 export GIT_CONFIG_GLOBAL="$HOME/.gitconfig"
 project="$tmp/project"
 mkdir -p "$HOME" "$project" "$tmp/outside"
-cp -R "$root"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$project/"
+bash "$root/tests/copy-project.sh" "$root" "$project"
 cat > "$project/config/accounts.conf" <<'CONF'
 GITHUB_PERSONAL_USER=alice
 GITHUB_PERSONAL_EMAIL=alice@example.com

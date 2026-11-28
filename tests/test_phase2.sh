@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-cp -R "$ROOT" "$TMP/project"
+bash "$ROOT/tests/copy-project.sh" "$ROOT" "$TMP/project"
 cat > "$TMP/project/config/profiles.conf" <<'CONFIG'
 GITHUB_PERSONAL_USER="test-user"
 GITHUB_PERSONAL_EMAIL="test@example.com"

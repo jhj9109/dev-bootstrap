@@ -4,7 +4,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 TMP="$(mktemp -d)"
 TMP="$(cd -P "$TMP" && pwd)"
 trap 'rm -rf "$TMP"' EXIT
-cp -R "$ROOT" "$TMP/project"
+bash "$ROOT/tests/copy-project.sh" "$ROOT" "$TMP/project"
 export HOME="$TMP/home" GIT_CONFIG_NOSYSTEM=1
 mkdir -p "$HOME" "$TMP/fixture"
 cat > "$TMP/project/config/profiles.conf" <<'CONF'

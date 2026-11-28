@@ -6,7 +6,7 @@ trap 'rm -rf "$tmp"' EXIT
 project="$tmp/project"
 export HOME="$tmp/home space" TRACE="$tmp/trace"
 mkdir -p "$project" "$HOME"
-cp -R "$root"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$project/"
+bash "$root/tests/copy-project.sh" "$root" "$project"
 config="$project/config/environments/minimal.conf"
 cli="$project/bootstrap.sh"
 fixture() {

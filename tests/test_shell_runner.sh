@@ -5,7 +5,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 export HOME="$tmp/home" GIT_CONFIG_NOSYSTEM=1
 mkdir -p "$HOME/.nvm" "$tmp/project" "$tmp/bin" "$tmp/outside"
-cp -R "$root"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$tmp/project/"
+bash "$root/tests/copy-project.sh" "$root" "$tmp/project"
 project="$tmp/project"
 export PATH="$tmp/bin:$PATH"
 rc="$HOME/.zshrc"

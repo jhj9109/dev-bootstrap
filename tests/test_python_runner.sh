@@ -3,6 +3,8 @@ set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
+bash "$root/tests/copy-project.sh" "$root" "$tmp/project"
+root="$tmp/project"
 export HOME="$tmp/home with spaces" FIXTURE="$tmp/fixture" PATH="$tmp/bin:$PATH"
 mkdir -p "$HOME" "$FIXTURE" "$tmp/bin"
 cat > "$FIXTURE/uv" <<'MOCK'
@@ -165,9 +167,6 @@ run_python 0 'python: SUCCESS' 'install 3.12.8' --version 3.12.8
 printf '6\n0\n' | "$root/setup.sh" > "$tmp/menu"
 grep -Fq 'python: SKIPPED' "$tmp/menu"
 # Force unavailable build tools without depending on the host's installed tools.
-mkdir "$tmp/project"
-cp -R "$root"/{setup.sh,bootstrap.sh,core,modules,lib,config} "$tmp/project/"
 printf '\nrequire_command() { [[ $1 != make ]]; }\n' >> "$tmp/project/lib/common.sh"
-root="$tmp/project"
 run_python 3 'python: BLOCKED' '' --version 3.12.8 --method source
 echo 'PASS: uv managed discovery, Shell repair, source isolation, staged build, retry and exit codes'

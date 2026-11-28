@@ -5,7 +5,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 export HOME="$tmp/home" GIT_CONFIG_NOSYSTEM=1
 mkdir -p "$HOME" "$tmp/project" "$tmp/bin" "$tmp/ordinary"
-cp -R "$root"/{setup.sh,bootstrap.sh,lib,core,modules,config} "$tmp/project/"
+bash "$root/tests/copy-project.sh" "$root" "$tmp/project"
 cat > "$tmp/project/config/profiles.conf" <<'CONF'
 GITHUB_PERSONAL_USER=alice
 GITHUB_PERSONAL_EMAIL=alice@example.com

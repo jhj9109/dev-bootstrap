@@ -5,7 +5,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 export HOME="$tmp/home"
 mkdir -p "$HOME" "$tmp/project"
-cp -R "$root"/{lib,core,modules,config} "$tmp/project/"
+bash "$root/tests/copy-project.sh" "$root" "$tmp/project"
 project=$tmp/project
 source "$project/lib/logger.sh"
 source "$project/lib/config.sh"

@@ -8,7 +8,7 @@ project="$tmp/project"
 dir="$HOME/.ssh"
 orb="$HOME/.orbstack/ssh/config"
 mkdir -p "$dir" "${orb%/*}" "$project" "$tmp/bin"
-cp -R "$root"/{setup.sh,core,modules,config,lib} "$project/"
+bash "$root/tests/copy-project.sh" "$root" "$project"
 cd "$project"
 cat > config/accounts.conf <<'CONF'
 GITHUB_PERSONAL_USER=alice

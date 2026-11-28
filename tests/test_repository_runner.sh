@@ -12,7 +12,7 @@ project="$tmp/project"
 list="$project/config/repositories.conf"
 workspace="$HOME/Work Area"
 mkdir -p "$project" "$HOME" "$tmp/bin" "$tmp/remotes" "$tmp/outside"
-cp -R "$root"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$project/"
+bash "$root/tests/copy-project.sh" "$root" "$project"
 cat > "$project/config/profiles.conf" <<'CONF'
 GITHUB_PERSONAL_USER=alice
 GITHUB_PERSONAL_EMAIL=a@example.com

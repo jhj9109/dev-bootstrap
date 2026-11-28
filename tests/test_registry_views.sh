@@ -6,7 +6,7 @@ trap 'rm -rf "$tmp"' EXIT
 export HOME="$tmp/home" TRACE="$tmp/trace"
 mkdir "$HOME"
 echo keep > "$HOME/file"
-cp -R "$root"/{setup.sh,bootstrap.sh,core,lib,modules,config} "$tmp/"
+bash "$root/tests/copy-project.sh" "$root" "$tmp"
 mkdir "$tmp/modules/sample"
 entry="$tmp/modules/sample/module.sh"
 cat > "$entry" <<'MODULE'

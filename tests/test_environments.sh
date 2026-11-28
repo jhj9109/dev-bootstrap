@@ -6,7 +6,7 @@ trap 'rm -rf "$tmp"' EXIT
 export HOME="$tmp/home"
 project="$tmp/project"
 mkdir -p "$HOME" "$project"
-cp -R "$root"/{setup.sh,bootstrap.sh,lib,core,modules,config} "$project/"
+bash "$root/tests/copy-project.sh" "$root" "$project"
 source "$project/lib/logger.sh"
 source "$project/lib/config.sh"
 source "$project/core/registry.sh"
