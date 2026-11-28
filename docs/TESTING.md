@@ -252,3 +252,9 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 기준 `0d0a485`. 사용자는 일반 터미널에서 personal gh apply 종료 0을 보고했다. 검증 세션에서는 이전 실행기와 동일한 GH_CONFIG_DIR·GIT_CONFIG_GLOBAL을 재사용하고 토큰 환경 변수를 제외했다. 격리 경로에 hosts.yml·config.yml이 없었고 격리 Git 파일에서 github.com helper 조회는 1이었다. gh API는 로그인을 요구했고 doctor는 4, check와 비대화형 재apply는 각각 1 NEEDS_ACTION(훅 4)이었다. 사용자 터미널과 결과가 다른 이유는 미확정이다.
 
 승인된 저장소의 익명 GitHub API 조회는 HTTP 404였다. 같은 저장소를 Documents 아래 별도 임시 Workspace에서 기존 personal SSH로 복원해 apply 0 SUCCESS, 재apply 0 SKIPPED, 기대한 SSH origin 일치를 확인했다. SSH 원격 doctor는 0이었고 복원 후에도 기존 사용자 파일·유효 helper가 로그인 전 비교 기준과 일치했다. 키체인 내용은 조회하지 않았다. gh 인증이 보이는 세션에서 doctor·helper·인증된 HTTPS 복원·재실행 검증을 이어간다.
+
+### T21 gh 인증 후 HTTPS 복원
+
+기준 `1f019a5`, Intel macOS 15.7.5, gh 2.106.0. 사용자가 동일한 격리 설정으로 브라우저 로그인 0, personal 계정 일치, gh apply 0 SUCCESS와 doctor 0을 확인했다. 검증 세션에서도 같은 실행기로 doctor 0, check와 재apply 모두 0 SKIPPED였다. 테스트 Git 파일의 github.com helper가 빈 초기화 항목 다음에 gh auth git-credential을 호출하는지 확인했다.
+
+인증된 API로 승인 저장소가 비공개임을 확인했다. 별도 Documents Workspace에서 gh 토큰 환경 변수를 해제하고 Git을 비대화형·HTTPS 전용으로 제한했다. repository check 1 CHANGE_NEEDED → apply 0 SUCCESS → check·재apply 모두 0 SKIPPED였다. HTTPS origin이 승인 대상과 일치했고 재실행 뒤 HEAD가 같고 작업 트리가 깨끗했다. 임시 복제본 정리 후 기존 personal SSH doctor 0, 원래 Git helper와 사용자 파일 비교 기준 일치를 확인했다. 테스트 gh 설정과 Git 설정을 유지했고 키체인의 자격 증명은 열람·삭제하지 않았다. 키체인 자체는 설정 파일 격리 범위 밖이다.
