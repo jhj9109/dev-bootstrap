@@ -114,7 +114,9 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 
 `tests/test_repository_runner.sh`는 Workspace 생성 시 목록 파일을 교체해 Repository의 검사·적용·검증이 처음 확정한 두 저장소를 끝까지 사용하는지 확인한다. 생성 호출이 한 번인지, 기존 개별 복제 명령이 계속 기본 목적지를 준비할 수 있는지도 검사한다.
 
-## T21 Intel iMac 수동 검사 — 진행 중
+## Intel iMac 수동 검사와 T21 검증 이력
+
+아래 기록은 실행 당시의 커밋과 장비에 해당한다. 현재 판정과 남은 운영 검증은 [교육장 호환성 매트릭스](#교육장-호환성-매트릭스)를 따른다.
 
 교육장 제공 결과는 기준 커밋 `18c05d7`, iMac20,1(x86_64), macOS 26.5.2(25F84), 시스템 Bash 3.2.57 및 zsh 5.9에서 얻었다. 문법 검사 59개와 회귀 테스트 26개가 통과했고 minimal·classroom 각각 plan과 dry-run 출력이 일치했다. Git·Workspace는 SKIPPED, Shell은 CHANGE_NEEDED였다. 관리 SSH 파일이 없는 상태에서 `check github --profile personal --method ssh`가 기존 OrbStack Include를 충돌로 판정했다(NEEDS_ACTION, check 훅 4).
 
@@ -133,7 +135,7 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 | 설치와 재실행 | 새 zsh에서 `nvm current`, `node --version`, `uv python find --managed-python` 확인. Source 설치 시 지정 prefix의 python 실행. iTerm2 앱을 직접 연다. 같은 all 재실행에서 SKIPPED와 사용자 파일 보존 확인. | PATH·active.list, Xcode 빌드 로그, 파일 소유권, Gatekeeper 및 배포 정책 |
 | 복구 | 전용 계정에서 설치 중단 후 같은 명령을 재시도한다. 운영자가 승인한 교육장 초기화 이후 개인 설정·저장소 목록으로 복원을 반복한다. | 잔여 staging·잠금과 기존 사용자 편집을 확인하고 자동 덮어쓰기 여부 점검 |
 
-기록에는 날짜, 장비·셸 버전, 커밋, 명령, 종료 코드와 기대 결과의 차이만 남긴다. 개인키·토큰·계정 파일·인증 출력 원문은 첨부하지 않는다. 실제 장비 결과가 있어야 T21을 완료로 표시한다.
+기록에는 날짜, 장비·셸 버전, 커밋, 명령, 종료 코드와 기대 결과의 차이만 남긴다. 개인키·토큰·계정 파일·인증 출력 원문은 첨부하지 않는다. 기준 장비의 출시 판정에는 [T21 완료 조건](TASKS.md)을 적용한다.
 
 ## T18 및 Phase 5
 
@@ -278,3 +280,27 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 `tests/test_config_atomic_and_ssh_doctor.sh`는 임시 HOME의 모의 SSH로 T21 최초 접속 사례(미등록 키, 종료 255)를 재현한다. 호스트 키 변경 경고, 공개키 거부, 다른 계정의 정상 인사(종료 1), DNS 실패와 연결 시간 초과도 검사한다. 각 실패에서 doctor는 4를 반환하고 해당 조치를 출력하며 SSH 응답 원문을 숨긴다. 원인이 없는 호스트 키 검증 실패와 출력·종료 코드가 맞지 않는 공개키 오류는 일반 경고로 처리한다.
 
 Intel macOS 15.7.5에서 작업 트리의 로컬 accounts.conf가 fixture 계정에 영향을 주어 첫 매트릭스가 실패했다. 기준 `67cca09`의 깨끗한 복제본에 변경을 적용하고 `BASH5_BIN=/private/tmp/t21-build/bash-5.3/bash BASH32_BIN=/bin/bash ./scripts/verify-matrix.sh`를 실행해 양쪽 모두 문법 검사 61개·회귀 스크립트 28개 통과를 확인했다. OrbStack 공존은 fixture로 검사했다. 교육장 실기기 검증과 초기화 후 복원은 대기 중이다.
+
+## 교육장 호환성 매트릭스
+
+교육장 기준 장비는 iMac20,1(x86_64), macOS 15.7.5(24G624), OpenSSH 9.9p2, 시스템 Bash 3.2.57, zsh 5.9다. T21은 이 장비의 전체 회귀와 아래 실사용 근거로 판정한다. 다른 장비는 실제 사용 시 검증하며, 다음 정기 초기화 때는 기준 장비에서도 복원 과정을 처음부터 확인한다.
+
+| 장비·환경 | 시나리오 | 결과와 근거 | 다음 확인 시점 |
+|---|---|---|---|
+| 기준 iMac · Bash 5.3.0 및 시스템 3.2.57 | 전체 자동 회귀 | 2026-11-28, `2651040`. 위 매트릭스에 `BASH5_BIN=/private/tmp/t21-build/bash-5.3/bash`, `BASH32_BIN=/bin/bash`를 지정해 각 행 문법 검사 63개·회귀 스크립트 29개 통과, 종료 0 | 출시 후보 및 호환성 수정 시 |
+| 기준 iMac · 직접 빌드한 Bash 5.2.0·5.2.37 | 계정 설정 회귀 | SIGSEGV 관찰. 5.2.37은 당시 기준 커밋에서도 재현됐으며 원인은 미확정이다. | 해당 빌드 사용 시 재현·원인 조사 |
+| 기준 iMac · 실제 HOME | Git·Shell 적용, Node·uv Python·iTerm2 설치, 새 zsh·앱 실행 | 통과. `12549ae`, `0904424`. Node 24.22.3, Python 3.12.16 실행 및 재적용 SKIPPED | 기준 설치 방식 변경 시 |
+| 기준 iMac · GitHub와 실제 저장소 | SSH 원격 인증·복원, gh 인증·격리 helper를 통한 비공개 HTTPS 복원 | 통과. `0904424`, `1f019a5`. SSH doctor와 gh doctor 성공, 재복원 SKIPPED | 인증 방식·모듈 변경 시 |
+| 기준 iMac · classroom | 실제 HOME에 별도 저장소 목록 적용, 전체 재실행 | 통과. `628f13a`. SSH 복원 후 check·all·check 모두 0, 8개 SKIPPED. 키·설정·origin·복제본 보존 | 전체 복원 경로 변경 시 |
+| 기준 iMac · Python Source | 컴파일 중단 후 동일 요청 재시도 | 통과. `02aadaf`. 부분 설치·잠금 정리, 3.12.10 실행 및 재적용 SKIPPED, 기존 uv 설치 보존 | 소스 설치 경로 변경 시 |
+| 기준 iMac · OrbStack fixture | 임시 HOME의 orb 유효 설정·GitHub 별칭 격리, 개인키 지문 | 통과. `0854da5`에서 시스템 OpenSSH로 확인. 원격 응답은 모의했고 실제 HOME에는 해당 OrbStack 구성이 없었다. | 실제 Include가 있는 장비 사용 시 |
+| iMac20,1 · macOS 26.5.2(25F84) · OpenSSH 10.2p1 · OrbStack Include | 실제 SSH 설정과 수정본의 공존 | 부분 검증. `18c05d7`에서 Include 충돌, `a672b21`에서 개인키 stdin 지문 조회 255. 수정 후 같은 장비에서의 결과 미확인 | 다음 사용 시 지문·OrbStack 회귀, 시스템 정책 포함 orb 유효 설정 전후 비교, GitHub check·apply·doctor와 실제 복원 |
+| 교육장 · 실제 초기화 직후 | 승인 계정의 비밀 없는 개인 설정·복원 목록으로 classroom 복구 | 미실행. 다음 정기 초기화 후 키 등록·인증, 새 zsh와 앱 실행, 목록별 origin과 두 번째 all의 SKIPPED·파일 보존을 기록한다. | 운영자가 승인한 정기 초기화 직후 |
+| 추가 교육장 Intel iMac · 다른 OS/OpenSSH 또는 OrbStack 구성 | 해당 장비의 실제 설치·인증·복원 | 미검증. 사용한 조합과 검사 범위별로 행을 추가한다. | 해당 조합 최초 사용 시 |
+
+### 호환성 문제 처리
+
+1. 새 환경을 사용할 때 날짜·커밋·모델·OS 빌드·Bash·OpenSSH 버전·OrbStack Include 사용 여부를 기록한다. 위 수동 검사 순서로 확인하고 성공한 조합은 실행한 명령·종료 코드·검증 범위와 함께 매트릭스에 추가한다.
+2. 실패하면 해당 행에 모듈·단계·기대값과 실제 종료 코드를 남긴다. 사용자 파일·키·origin을 보존하고, 식별 정보와 비밀을 제거한 최소 설정으로 같은 버전에서 재현한다.
+3. 임시 HOME에 실패를 재현하는 회귀 테스트를 추가한다. 관련 모듈을 수정한 뒤 해당 테스트와 Bash 양쪽 전체 매트릭스를 실행하고, 승인된 계정에서 원래 실패한 명령과 재실행·파일 보존을 확인한다.
+4. 수정 커밋과 결과를 TESTING과 STATUS에 반영한다. 원 장비를 다시 사용할 수 있을 때까지 그 행에는 ‘수정 후 현장 재검증 대기’를 유지한다. 기준 장비에서도 재현되거나 사용자 데이터 보존 계약을 깨는 결함은 출시 차단 문제로 다시 평가한다.
