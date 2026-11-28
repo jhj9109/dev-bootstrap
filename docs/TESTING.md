@@ -191,3 +191,16 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 | github (ssh) | 비대화형 1 NEEDS_ACTION(훅 4), TTY 1 CHANGE_NEEDED | 전용 키 생성 시 사용자의 터미널 패스프레이즈 입력 대기 | 미실행 |
 
 사용자가 로컬 터미널에서 `./setup.sh apply github --environment classroom --profile personal`을 실행해 패스프레이즈를 직접 입력한 뒤 로컬 check를 반복한다. 공개키 등록과 원격 인증은 별도 단계다. Node·Python(uv)·iTerm2 적용 및 새 zsh 실행 검사는 대기다. 사용자 파일 전후의 독립적인 내용 대조는 미실행이다.
+
+### 2026-11-28 실제 인증·설치·저장소 복원
+
+기준 `0904424`, 로컬 Intel macOS 15.7.5, classroom·personal·ssh. 사용자는 SSH 키 구성, 공개키 등록, 공식 GitHub ED25519 호스트 키 지문 대조와 known_hosts 등록, SSH agent 등록을 수행했다. 최초 SSH 인증은 호스트 키 미등록으로 종료 255였다. 등록 후 사용자가 실행한 `./setup.sh doctor github --profile personal --method ssh`에서 대상 계정 인증 성공을 확인했다. 이번 세션에서 로컬 GitHub check는 0 SKIPPED였다. 최초 호스트 키 확인·등록 안내와 exit 255의 원인별 진단을 후속 개선 후보로 기록한다.
+
+| 실제 대상 | 적용 전 check | apply | 적용 후 check / 두 번째 apply | 실행 확인 |
+|---|---|---|---|---|
+| Node 24 | 1 CHANGE_NEEDED | 0 SUCCESS | 모두 0 SKIPPED | 새 로그인·대화형 zsh에서 nvm current와 node --version 모두 v24.22.3 |
+| Python 3.12 (uv) | 1 CHANGE_NEEDED | 0 SUCCESS | 모두 0 SKIPPED | 같은 zsh에서 uv 0.13.10으로 관리 인터프리터를 오프라인 조회하고 직접 실행해 3.12.16 확인 |
+| iTerm2 | 1 CHANGE_NEEDED | 0 SUCCESS | 모두 0 SKIPPED | 사용자 Applications의 앱을 열고 iTerm2 프로세스 확인 |
+| repository | 1 CHANGE_NEEDED | 0 SUCCESS | 모두 0 SKIPPED | 승인된 테스트 저장소를 personal SSH로 복원, 복제 HEAD 44c15d5 확인 |
+
+각 행은 `./setup.sh check MODULE`, `apply MODULE`, `check MODULE`, `apply MODULE` 순서다. 저장소 검사는 현재 작업 저장소를 대상으로 별도 목록과 빈 Workspace를 사용했다. 첫 시도는 HOME 밖 임시 경로여서 workspace 훅이 2를 반환하고 clone 전에 차단됐다. Documents 아래 전용 임시 경로에서 기존 known_hosts와 agent를 사용해 strict host key checking으로 복원한 후 임시 복제본을 정리했다. 영구 복원 목록은 편집하지 않았다. 교육장 OS·OpenSSH 조합과 OrbStack 공존, 설치 중단 후 재시도 및 초기화 후 복원 등 남은 T21 항목은 대기다.
