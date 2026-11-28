@@ -156,3 +156,13 @@ Linux의 임시 복제본에는 Git 추적 파일만 복사하고 빈 환경·�
 기준 a672b21의 교육장 iMac20,1(Intel x86_64, macOS 26.5.2, Bash 3.2.57, OpenSSH_10.2p1 / LibreSSL 3.3.6)에서 test_orbstack.sh의 GitHub apply가 1로 중단됐다. 실제 Ed25519 공개키와 인접 .pub 없는 개인키를 각각 파일 경로로 검사한 결과와 공개키를 /dev/stdin 경유로 검사한 결과는 모두 종료 0, 동일한 SHA256 지문이었다. 개인키만 /dev/stdin 경유 시 “/dev/stdin is not a key file.”과 종료 255를 반환했다.
 
 ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전에 apply로 전파됐다. 수정본은 모드 700인 임시 디렉터리에 원본을 가리키는 링크 하나를 만들고 그 경로를 ssh-keygen -l에 전달한다. OpenSSH가 이웃 .pub를 선택할 수 없으며 개인키 복사나 복호화가 필요 없다. tests/test_ssh_fingerprint.sh는 실제 OpenSSH로 일반·암호화 키의 지문, 바꿔 놓은 인접 공개키, 임시 경로 권한, 실패 후 정리와 원본 보존을 검사한다. 교육장에서는 수정 커밋으로 전체 매트릭스와 기존 OrbStack 검사를 재실행한다.
+
+수정본 `0854da5`를 iMac20,1(x86_64), macOS 15.7.5(24G624), OpenSSH_9.9p2 / LibreSSL 3.3.6에서 재검증했다. 임시 HOME과 기본 Bash 3.2.57로 아래 세 명령을 순서대로 실행했고 모두 종료 0이었다.
+
+```bash
+/bin/bash tests/test_ssh_fingerprint.sh
+/bin/bash tests/test_orbstack.sh
+/bin/bash scripts/verify.sh
+```
+
+지문 검사의 불일치·잘못된 입력 오류는 음성 테스트에서 기대한 출력이다. OrbStack fixture의 설정 보존과 GitHub 프로필 격리를 확인했고 전체 검사는 문법 61개·회귀 스크립트 28개를 통과했다. 교육장 macOS 26.5.2·OpenSSH 10.2p1에서의 수정본 실행과 실계정 인증·초기화 후 복원은 대기 중이다.
