@@ -240,3 +240,9 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 | 같은 명령 재실행 | 0 SKIPPED | 설치 트리 전체 파일 내용·권한·소유권·링크가 재실행 직전과 일치했다. 최종 Source 및 uv check도 각각 0 SKIPPED였다. |
 
 다운로드 전 실제 uv 관리 인터프리터 경로·실행 버전과 사용자 파일을 비교 기준으로 확보했다. 중단·재설치·재실행 직후마다 uv 관리 Python 3.12.16을 직접 실행했고, 관리 설치 트리·.local/bin·SSH·Git·zsh·관리 셸 설정·프로젝트 config와 .git/config의 경로, 일반 파일 내용(SHA-256), 모드, 소유자·그룹, 링크 대상이 기준과 일치했다. 비교값과 파일 원문은 기록하지 않았다. 중단 지점은 최종 prefix 게시 전의 컴파일 단계였다.
+
+### T21 gh 실제 검증 — 로그인 대기
+
+기준 `2912795`, Intel macOS 15.7.5. personal SSH check와 원격 doctor는 0이었다. gh 미설치 시 check는 1 BLOCKED(훅 3)였다. 승인 후 공식 Intel macOS 배포 zip의 SHA-256을 배포 체크섬과 대조하고 gh 2.106.0을 사용자 .local/bin에 설치했다. sudo는 사용하지 않았다.
+
+기존 Git 설정을 include하는 별도 전역 설정 파일과 전용 GH_CONFIG_DIR에서 토큰 환경 변수 없이 실행했다. 대화형 gh check는 1 CHANGE_NEEDED, 로그인 전 doctor는 4, 비대화형 apply는 1 NEEDS_ACTION(훅 4)이었다. SSH 파일·기존 Git 설정과 유효 helper·셸 설정·프로젝트 설정은 설치 전과 비교해 동일했다. 다음은 사용자 터미널에서 personal 계정으로 대화형 apply, doctor, check·재apply 검증이다. HTTPS 복원과 이후 기존 SSH 경로 대조, 교육장 OS 재검증과 초기화 후 복원은 대기다.
