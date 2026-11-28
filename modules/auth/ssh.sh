@@ -10,22 +10,32 @@ ssh_safe_paths() {
   done
 }
 
-ssh_fingerprint() {
-  local line bits digest rest
-  # Reading the private file on stdin prevents OpenSSH from silently using
-  # its adjacent .pub file, including for a passphrase-protected OpenSSH key.
-  line=$(ssh-keygen -l -E sha256 -f /dev/stdin < "$1" 2>/dev/null) || return 1
-  [[ $line != *$'\n'* ]] || return 1
+ssh_fingerprint() (
+  local line bits digest rest dir path=$1
+  case "$path" in /*) ;; *) path=$PWD/$path ;; esac
+  # OpenSSH can consult <filename>.pub. Give it a private directory with
+  # only a symlink to the source, so no key material needs to be copied.
+  umask 077
+  dir=$(mktemp -d) || { log_error 'Cannot create fingerprint directory'; return 1; }
+  trap 'if ! rm -f "$dir/key" || ! rmdir "$dir"; then log_error "Cannot clean fingerprint directory"; exit 1; fi' EXIT
+  trap 'exit 1' HUP INT TERM
+  ln -s "$path" "$dir/key" || { log_error 'Cannot link fingerprint input'; return 1; }
+  line=$(ssh-keygen -l -E sha256 -f "$dir/key" </dev/null 2>/dev/null) || {
+    log_error 'OpenSSH could not fingerprint the key file'; return 1
+  }
   read -r bits digest rest <<< "$line"
-  [[ $bits =~ ^[0-9]+$ && $digest =~ ^SHA256:[A-Za-z0-9+/=]+$ ]] || return 1
+  [[ $line != *$'\n'* && $bits =~ ^[0-9]+$ && $digest =~ ^SHA256:[A-Za-z0-9+/=]+$ ]] || {
+    log_error 'Unexpected OpenSSH fingerprint format'; return 1
+  }
   printf '%s\n' "$digest"
-}
+)
 
 ssh_public_matches() {
   local public
   # Never accept a private-key file in the public-key slot.
-  awk 'NR != 1 || $1 !~ /^(ssh-|ecdsa-|sk-)/ || NF < 2 { bad=1 } END { exit (bad || NR != 1) }' "$1" || return 1
-  public=$(ssh_fingerprint "$1") && [[ $public == "$2" ]]
+  awk 'NR != 1 || $1 !~ /^(ssh-|ecdsa-|sk-)/ || NF < 2 { bad=1 } END { exit (bad || NR != 1) }' "$1" || { log_error 'Invalid SSH public key format'; return 1; }
+  public=$(ssh_fingerprint "$1") || return 1
+  [[ $public == "$2" ]] || { log_error 'SSH key pair mismatch'; return 1; }
 }
 
 ssh_render_hosts() {
@@ -176,7 +186,7 @@ ssh_inspect() {
     }
     fingerprint=$(ssh_fingerprint "$PROFILE_KEY") || { log_error 'Cannot fingerprint private key'; return 1; }
     if [[ -e $PROFILE_KEY.pub ]]; then
-      ssh_public_matches "$PROFILE_KEY.pub" "$fingerprint" || { log_error 'SSH key pair mismatch'; return 1; }
+      ssh_public_matches "$PROFILE_KEY.pub" "$fingerprint" || return 1
     else need=10; fi
     mode=$(ssh_mode "$PROFILE_KEY") || return 1
     case "$mode" in 400|600) ;; *) need=10 ;; esac

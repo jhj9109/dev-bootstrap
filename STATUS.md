@@ -31,6 +31,8 @@
 | T20 검증 | Linux Bash 5.2.37과 3.2.57 각각 문법 검사 59개·테스트 26개 통과. T19 확장성과 실제 zsh 5.9 회귀를 포함한다. 임시 HOME에서 문서의 조회·계획·적용·재실행과 파일 보존을 확인했다. 도구별 다운로드 검증·정리 범위는 [운영 한계](docs/DESIGN_AND_LIMITATIONS.md)에 기록했다. |
 | T21 교육장 부분 검증 | `18c05d7`, iMac20,1(x86_64), macOS 26.5.2(25F84), Bash 3.2.57·zsh 5.9에서 문법 59개·회귀 26개 통과. minimal·classroom plan/dry-run 일치, Git·Workspace SKIPPED, Shell CHANGE_NEEDED. GitHub SSH check가 OrbStack Include에서 NEEDS_ACTION(훅 4)으로 중단됐다. |
 | T21 SSH 수정본 자동 검증 | Linux x86_64 Bash 5.2.37·3.2.57 각각 문법 60개·회귀 27개 통과. OpenSSH 10.0p2로 임시 HOME의 orb 설정 보존과 두 GitHub 프로필 격리를 확인했다. 원격 인증 응답은 모의했다. |
+| T21 개인키 지문 | 교육장 iMac의 a672b21에서 OpenSSH 10.2p1은 개인키 경로 검사에 성공했으나 /dev/stdin 경유 시 255로 실패해 OrbStack 테스트의 GitHub apply가 중단됐다. 보호된 임시 디렉터리의 링크로 개인키 자체를 검사하도록 수정했다. Intel macOS 15.7.5, OpenSSH 9.9p2에서 전체 매트릭스 Bash 5.3.0·3.2.57 각각 문법 61개·회귀 28개 통과. 교육장 26.5.2 수정본은 재검증 대기다. |
+| 추가 환경 관찰 | 이 환경에서 직접 빌드한 Bash 5.2.0·5.2.37은 계정 설정 테스트에서 SIGSEGV로 중단됐다. 5.2.37은 기준 커밋에서도 동일하게 재현됐다. |
 | 미검증 및 알려진 제약 | 수정본의 OrbStack 공존, 실제 설치 및 외부 인증은 iMac 재검증 대기다. 다운로드 파일별 독립적인 무결성 검증이 제한적이다. |
 | 검토할 결정 | 편집된 env.zsh의 수동 이관 |
 | 다음 작업 | Phase 7의 T21은 진행 중이다. 승인된 Intel iMac 테스트 계정에서 [실기 검사 절차](docs/TESTING.md)에 따라 실제 설치·인증·초기화 후 복원을 확인한다. [구현 작업 목록](docs/TASKS.md) |

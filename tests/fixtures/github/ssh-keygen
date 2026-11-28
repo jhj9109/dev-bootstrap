@@ -2,8 +2,8 @@
 set -eu
 case "$1" in
   -l)
-    [[ "${*:2}" == '-E sha256 -f /dev/stdin' ]]
-    content=$(cat)
+    [[ $# == 5 && $2 == -E && $3 == sha256 && $4 == -f && -L $5 && ! -e $5.pub ]]
+    content=$(cat "$5")
     case "$content" in
       *'fixture-id: '*) id=${content##*fixture-id: } ;;
       'ssh-ed25519 '*) id=${content#ssh-ed25519 }; id=${id%% *} ;;

@@ -150,3 +150,9 @@ BASH5_BIN=/opt/bash5/bin/bash BASH32_BIN=/opt/bash32/bin/bash ./scripts/verify-m
 Linux의 임시 복제본에는 Git 추적 파일만 복사하고 빈 환경·임시 HOME·가상 계정값·file 전용 Git 전송을 사용했다. README의 설정 예시 복사, list/help, minimal plan과 같은 옵션의 all --dry-run 출력 일치, check workspace(1) → apply workspace(0) → check workspace(0)를 확인했다. configure git의 작성자, configure shell 이후 기존 .zshrc 줄 보존과 실제 zsh의 두 번 로드, 메뉴 11→0도 확인했다. 기본 doctor는 Linux와 xcode-select 부재를 보고하고 1로 종료했다.
 
 전체 매트릭스는 install node/python/iterm과 configure github·doctor github를 모의 배포·인증 도구로, repo clone/remote와 목록 복원을 로컬 Git 저장소로 검사한다. 이 결과가 다루는 범위는 명령 분기·파일 보존·실패 후 재시도다. 실제 배포 서비스, macOS 앱 실행과 GitHub 원격 인증은 T21에서 확인한다.
+
+### T21 개인키 지문 재검증
+
+기준 a672b21의 교육장 iMac20,1(Intel x86_64, macOS 26.5.2, Bash 3.2.57, OpenSSH_10.2p1 / LibreSSL 3.3.6)에서 test_orbstack.sh의 GitHub apply가 1로 중단됐다. 실제 Ed25519 공개키와 인접 .pub 없는 개인키를 각각 파일 경로로 검사한 결과와 공개키를 /dev/stdin 경유로 검사한 결과는 모두 종료 0, 동일한 SHA256 지문이었다. 개인키만 /dev/stdin 경유 시 “/dev/stdin is not a key file.”과 종료 255를 반환했다.
+
+ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전에 apply로 전파됐다. 수정본은 모드 700인 임시 디렉터리에 원본을 가리키는 링크 하나를 만들고 그 경로를 ssh-keygen -l에 전달한다. OpenSSH가 이웃 .pub를 선택할 수 없으며 개인키 복사나 복호화가 필요 없다. tests/test_ssh_fingerprint.sh는 실제 OpenSSH로 일반·암호화 키의 지문, 바꿔 놓은 인접 공개키, 임시 경로 권한, 실패 후 정리와 원본 보존을 검사한다. 교육장에서는 수정 커밋으로 전체 매트릭스와 기존 OrbStack 검사를 재실행한다.
