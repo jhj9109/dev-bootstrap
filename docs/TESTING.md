@@ -166,3 +166,16 @@ ssh_setup은 키 생성 직후 쌍을 검사하므로 이 실패가 게시 전�
 ```
 
 지문 검사의 불일치·잘못된 입력 오류는 음성 테스트에서 기대한 출력이다. OrbStack fixture의 설정 보존과 GitHub 프로필 격리를 확인했고 전체 검사는 문법 61개·회귀 스크립트 28개를 통과했다. 교육장 macOS 26.5.2·OpenSSH 10.2p1에서의 수정본 실행과 실계정 인증·초기화 후 복원은 대기 중이다.
+
+### 2026-11-28 로컬 읽기 전용 점검
+
+기준 `dd062dc`, Intel x86_64 macOS 15.7.5(24G624), 기본 Bash 3.2.57, zsh 5.9, OpenSSH 9.9p2 / LibreSSL 3.3.6. 실제 사용자 HOME을 대상으로 기본 personal·ssh 설정에서 조회했다. 사용자 파일 전후의 내용·권한 대조는 미실행이다.
+
+| 명령 | 종료 코드와 관찰 |
+|---|---|
+| `./setup.sh doctor` | 0. 실패 0, 경고 2(SSH config 없음, PATH에서 Node 없음). Git·curl·Xcode CLI 경로·Workspace 확인. PATH의 python3은 3.9.6이다. |
+| `./setup.sh plan --environment ENV`, `./setup.sh all --dry-run --environment ENV` | minimal(4개)·classroom(8개)에서 모두 0. 환경별 두 출력이 바이트 단위로 일치했다. |
+| `./setup.sh check MODULE --environment classroom` | workspace와 repository는 0(SKIPPED). 저장소 목록이 없어 복원 대상은 0개였다. git과 github는 각각 1(훅 2). personal 사용자명·이메일 미설정으로 SSH 구성 검사 전 중단됐다. |
+| 같은 check의 shell·node·python·iterm | 각각 1. Shell과 iTerm2는 CHANGE_NEEDED. Node와 Python은 Shell 선행 조건으로 BLOCKED여서 자체 훅은 실행되지 않았다. 기본 nvm.sh·사용자 uv 실행 파일이 없었고 PATH에 gh도 없었다. |
+
+승인된 테스트 계정에서 personal 사용자명·커밋 이메일을 로컬 계정 설정에 준비하고 Git·GitHub check를 다시 실행한다. HOME 변경 승인 후 Git 작성자·Shell·SSH 설정을 적용하고 check를 반복한다. 다운로드 승인 후 classroom 목표인 Node 24(nvm), Python 3.12(uv), iTerm2를 적용하고 새 zsh에서 버전과 앱 실행을 확인한다. SSH는 호스트 키를 확인하고 공개키 등록·원격 인증 승인 후 doctor github를 실행한다. 테스트 저장소 목록과 접근 권한이 준비되면 복원과 재실행을 확인한다. gh 방식은 별도 설치·인증 검증이 필요하다. 현재 표준 OrbStack 설정 경로에는 파일이 없어 교육장 설정과의 공존은 미검증이다. 교육장 26.5.2·OpenSSH 10.2p1 재검증, 설치 중단 후 재시도와 초기화 후 복원은 대기다.
